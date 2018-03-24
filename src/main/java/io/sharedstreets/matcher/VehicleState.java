@@ -96,6 +96,8 @@ public class VehicleState {
                             snappedEvent.edgeFraction = edgeFraction;
                             snappedEvent.time = endTime;
                             snappedEvent.speed = speed;
+                            snappedEvent.filterProbability = candidate.filtprob();
+                            snappedEvent.sequenceProbability = candidate.seqprob();
 
                             snappedEvent.matchedPoint = matchedPoint;
                             snappedEvent.observedPoint = observedPoint;

@@ -50,11 +50,15 @@ public class Ingester {
                 .withArgName("OUTPUT-DIR")
                 .create() );
 
+        options.addOption("speeds", "track GPS speed when available");
+
         String inputPath = "";
 
         String outputPath = "";
 
         String inputType = "";
+
+        boolean gpsSpeeds = false;
 
         try {
             // parse the command line arguments
@@ -70,6 +74,11 @@ public class Ingester {
             if( line.hasOption( "output" ) ) {
                 // print the value of block-size
                 outputPath = line.getOptionValue( "output" );
+            }
+
+            if( line.hasOption( "speeds" ) ) {
+                // print the value of block-size
+                gpsSpeeds = true;
             }
 
             if( line.hasOption( "type" ) ) {
@@ -115,7 +124,7 @@ public class Ingester {
         DataSet<InputEvent> inputEvents = null;
 
         if (finalInputType.equals("GPX")) {
-            inputEvents = env.createInput(new GpxInputFormat(inputPath));
+            inputEvents = env.createInput(new GpxInputFormat(inputPath, gpsSpeeds));
         }
         else {
             DataSet<String> inputStream = env.readTextFile(inputPath);

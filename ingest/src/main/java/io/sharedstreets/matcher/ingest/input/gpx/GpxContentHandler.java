@@ -40,7 +40,7 @@ final class GpxContentHandler extends DefaultHandler {
     private long time = Long.MIN_VALUE;
     private double lat;
     private double lon;
-    
+
     private Double speed;
     private String name;
 

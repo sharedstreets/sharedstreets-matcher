@@ -290,6 +290,8 @@ public class MatchOutput extends GeoJSONData {
             }
 
             params.put("speed", snappedEvent.speed);
+            params.put("sequenceprob", snappedEvent.sequenceProbability);
+            params.put("filterprob", snappedEvent.filterProbability);
 
             addGeoJSONPoint(jsonStream, snappedEvent.matchedPoint, "#0000ff", params);
 
