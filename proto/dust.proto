@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+
+message MapDustTrace {
+
+    string endId = 1;
+
+    repeated double startFraction = 2;
+    repeated double endFraction = 3;
+
+    repeated double lonlats = 4;
+
+}
+
+message MapDust {
+
+  string startId = 1;
+
+  repeated MapDustTrace traceData = 2;
+
+}

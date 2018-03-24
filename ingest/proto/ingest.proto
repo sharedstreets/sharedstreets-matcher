@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+message EventData {
+  string eventType = 1;
+  double eventValue = 2;
+}
+
+message InputEventProto {
+
+  uint64 time = 1;
+  string vehicleId = 2;
+  double lat = 3;
+  double lon = 4;
+  
+  repeated EventData eventData = 5;
+
+}
