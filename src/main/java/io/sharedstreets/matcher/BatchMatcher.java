@@ -14,11 +14,13 @@ import org.apache.commons.cli.*;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.GroupReduceFunction;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.io.FileInputFormat;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,7 +172,7 @@ public class BatchMatcher {
 
         // step 1: read strings (blocks of location events from file)
 
-        DataSet<InputEvent> inputEvents = env.readFile(new FileInputFormat<InputEvent>() {
+        DataSet<Tuple3<Long, Long, InputEvent>> inputEvents = env.readFile(new FileInputFormat<InputEvent>() {
 
             @Override
             public boolean reachedEnd() throws IOException {
@@ -185,10 +187,15 @@ public class BatchMatcher {
                 Ingest.InputEventProto proto = Ingest.InputEventProto.parseDelimitedFrom(this.stream);
                 return InputEvent.fromProto(proto);
             }
-        }, inputPath).setParallelism(1).filter(new FilterFunction<InputEvent>() {
+        }, inputPath).setParallelism(1).map(new MapFunction<InputEvent, Tuple3<Long, Long, InputEvent>>() {
             @Override
-            public boolean filter(InputEvent value) throws Exception {
-                return value.vehicleId != null;
+            public Tuple3<Long, Long, InputEvent> map(InputEvent value) throws Exception {
+                return new Tuple3<Long, Long, InputEvent>(value.vehicleId, value.time, value);
+            }
+        }).filter(new FilterFunction<Tuple3<Long, Long, InputEvent>>() {
+            @Override
+            public boolean filter(Tuple3<Long, Long, InputEvent> value) throws Exception {
+                return value.f1 != null;
             }
         });
 

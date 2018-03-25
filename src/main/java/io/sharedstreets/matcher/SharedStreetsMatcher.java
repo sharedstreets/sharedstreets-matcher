@@ -22,10 +22,12 @@ import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -38,6 +40,7 @@ public class SharedStreetsMatcher extends Matcher implements Serializable {
 
     public static SharedStreetsMatcher matcher;
     public static RoadMap map;
+
 
     public static SpatialOperator spatial = new Geography();
 
@@ -56,11 +59,13 @@ public class SharedStreetsMatcher extends Matcher implements Serializable {
     }
 
 
-    public DataSet<SnappedEvent> snapEvents(DataSet<InputEvent> inputEvents, double radius) {
+    public DataSet<SnappedEvent> snapEvents(DataSet<Tuple3<Long, Long, InputEvent>> inputEvents, double radius) {
 
-        DataSet<SnappedEvent> snappedEvents = inputEvents.flatMap(new FlatMapFunction<InputEvent, SnappedEvent>() {
+        DataSet<SnappedEvent> snappedEvents = inputEvents.flatMap(new FlatMapFunction<Tuple3<Long, Long, InputEvent>, SnappedEvent>() {
             @Override
-            public void flatMap(InputEvent item, Collector<SnappedEvent> out) throws Exception {
+            public void flatMap(Tuple3<Long, Long, InputEvent> value, Collector<SnappedEvent> out) throws Exception {
+
+                InputEvent item = value.f2;
 
                 com.esri.core.geometry.Point p = new com.esri.core.geometry.Point(item.point.lon, item.point.lat);
                 Set<RoadPoint> roadPoints = map.index().radius(p, radius);
@@ -99,21 +104,13 @@ public class SharedStreetsMatcher extends Matcher implements Serializable {
         return snappedEvents;
     }
 
-    public DataSet<MatchOutput> matchEvents(DataSet<InputEvent> inputEvents, boolean debug) {
+    public DataSet<MatchOutput> matchEvents(DataSet<Tuple3<Long, Long, InputEvent>> inputEvents, boolean debug) {
 
-        DataSet<MatchOutput> matchOutputDataSet = inputEvents.groupBy(new KeySelector<InputEvent, String>() {
-            @Override
-            public String getKey(InputEvent value) throws Exception {
-                return value.vehicleId;
-            }
-        }).sortGroup(new KeySelector<InputEvent, Long>() {
-            @Override
-            public Long getKey(InputEvent value) throws Exception {
-                return value.time;
-            }}, Order.ASCENDING)
-                .reduceGroup(new GroupReduceFunction<InputEvent, MatchOutput>() {
+        DataSet<MatchOutput> matchOutputDataSet = inputEvents.groupBy(0)
+                .sortGroup(1, Order.ASCENDING)
+                .reduceGroup(new GroupReduceFunction<Tuple3<Long, Long, InputEvent>, MatchOutput>() {
                     @Override
-                    public void reduce(Iterable<InputEvent> values, Collector<MatchOutput> out) throws Exception {
+                    public void reduce(Iterable<Tuple3<Long, Long, InputEvent>> values, Collector<MatchOutput> out) throws Exception {
                         try {
 
                             //TraceResults
@@ -124,12 +121,16 @@ public class SharedStreetsMatcher extends Matcher implements Serializable {
                             Stopwatch sw = new Stopwatch();
                             sw.start();
                             int inputCount = 0;
-                            for (InputEvent item : values) {
+                            int sequenceCount = 0;
+                            for (Tuple3<Long, Long, InputEvent> value : values) {
+
+                                InputEvent item = value.f2;
 
                                 if(matchOutput.id == null)
-                                    matchOutput.id = item.vehicleId;
+                                    matchOutput.id = item.vehicleId.toString();
 
                                 inputCount++;
+                                sequenceCount++;
 
                                 if(item.eventData != null)
                                     state.addEventData(item.time, item.eventData);
@@ -167,19 +168,26 @@ public class SharedStreetsMatcher extends Matcher implements Serializable {
                                     vector.set(matcher.execute(state.kState.vector(), state.kState.sample(), sample));
                                     state.kState.update(vector.get(), sample);
 
+                                    // limit max sequence length TODO make configurable
+                                    if(sequenceCount > 1000) {
+                                        state.extractEvents(matchOutput, debug);
+                                        state.reset();
+                                        sequenceCount = 0;
+                                    }
+
                                 }
                             }
-
-                            sw.stop();
 
                             if(state !=null) {
 
                                 synchronized (state) {
 
-                                    state.extractEvents(matchOutput);
+                                    state.extractEvents(matchOutput, debug);
 
                                 }
                             }
+
+                            sw.stop();
 
                             if(inputCount > 0)
                                 logger.info("{} items in {}ms ({}ms/item): {}", inputCount, sw.ms(), ((double)Math.round((sw.us() / inputCount) /10)/100.0), matchOutput.speedEvents.size());

@@ -6,11 +6,29 @@ import io.sharedstreets.matcher.model.Point;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class InputEvent implements Serializable {
 
+    static public HashMap<String, Long> vehicleIdStringMap  = new HashMap<>();
+    static public HashMap<Long, String> vehicleIdLongMap  = new HashMap<>();
+    static AtomicLong nextId = new AtomicLong(1l);
+
+    static synchronized Long getVehicleIdFromString(String vehicleIdString) {
+
+        if(!vehicleIdStringMap.containsKey(vehicleIdString)) {
+            Long id = nextId.getAndIncrement();
+            vehicleIdStringMap.put(vehicleIdString, id);
+            vehicleIdLongMap.put(id, vehicleIdString);
+
+        }
+
+        return vehicleIdStringMap.get(vehicleIdString);
+    }
+
+    public Long vehicleId;
     public Long time;
-    public String vehicleId;
+
     public Point point;
     public Point matchedPoint;
 
@@ -23,7 +41,7 @@ public class InputEvent implements Serializable {
         Ingest.InputEventProto.Builder inputEventProto = Ingest.InputEventProto.newBuilder();
 
         inputEventProto.setTime(this.time);
-        inputEventProto.setVehicleId(this.vehicleId);
+        inputEventProto.setVehicleId(vehicleIdLongMap.get(this.vehicleId));
         inputEventProto.setLat(this.point.lat);
         inputEventProto.setLon(this.point.lon);
 
@@ -45,7 +63,8 @@ public class InputEvent implements Serializable {
     public static InputEvent fromProto(Ingest.InputEventProto inputEventProto) {
         InputEvent inputEvent = new InputEvent();
         inputEvent.time = inputEventProto.getTime();
-        inputEvent.vehicleId = inputEventProto.getVehicleId();
+
+        inputEvent.vehicleId = getVehicleIdFromString(inputEventProto.getVehicleId());
         inputEvent.point = new Point(inputEventProto.getLon(), inputEventProto.getLat());
 
         for(Ingest.EventData eventData : inputEventProto.getEventDataList()) {
