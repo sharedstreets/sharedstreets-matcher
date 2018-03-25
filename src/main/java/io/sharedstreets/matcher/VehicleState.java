@@ -28,6 +28,7 @@ public class VehicleState {
     }
 
     public void reset(){
+        speedEventMaxTime = 0l;
         kState = new MatcherKState();
         eventData = new HashMap<>();
     }
@@ -38,7 +39,7 @@ public class VehicleState {
         eventData.put(eventTime, data);
     }
 
-    public void extractEvents(MatchOutput output) {
+    public void extractEvents(MatchOutput output, boolean debug) {
 
         try {
             if (kState.estimate() != null) {
@@ -62,7 +63,6 @@ public class VehicleState {
 
                         long startTime = kState.samples().get(i - 1).time();
                         long endTime = kState.samples().get(i).time();
-                        com.esri.core.geometry.Point samplePoint =  kState.samples().get(i).point();
                         double length = candidate.transition().route().length();
 
                         // calc speed m/s for transition
@@ -71,20 +71,29 @@ public class VehicleState {
                         if(lastReset == null)
                             lastReset = endTime;
 
-                        Point matchedPoint = new Point(candidate.point().geometry().getX(), candidate.point().geometry().getY());
-                        Point observedPoint = new Point(samplePoint.getX(), samplePoint.getY());
-                        PointEstimate pointEstimate = new PointEstimate();
+                        Point matchedPoint = null;
+                        Point observedPoint = null;
 
-                        pointEstimate.sequenceprob = candidate.seqprob();
-                        pointEstimate.filterprob = candidate.filtprob();
 
-                        pointEstimate.speed = speed;
-                        pointEstimate.time = endTime;
 
-                        pointEstimate.matchedPoint = matchedPoint;
-                        pointEstimate.observedPoint = observedPoint;
+                        if(debug) {
+                            matchedPoint = new Point(candidate.point().geometry().getX(), candidate.point().geometry().getY());
+                            com.esri.core.geometry.Point samplePoint =  kState.samples().get(i).point();
+                            observedPoint = new Point(samplePoint.getX(), samplePoint.getY());
 
-                        output.pointEstimates.add(pointEstimate);
+                            PointEstimate pointEstimate = new PointEstimate();
+
+                            pointEstimate.sequenceprob = candidate.seqprob();
+                            pointEstimate.filterprob = candidate.filtprob();
+
+                            pointEstimate.speed = speed;
+                            pointEstimate.time = endTime;
+
+                            pointEstimate.matchedPoint = matchedPoint;
+                            pointEstimate.observedPoint = observedPoint;
+
+                            output.pointEstimates.add(pointEstimate);
+                        }
 
                         if (eventData.containsKey(endTime)) {
 
@@ -99,8 +108,10 @@ public class VehicleState {
                             snappedEvent.filterProbability = candidate.filtprob();
                             snappedEvent.sequenceProbability = candidate.seqprob();
 
-                            snappedEvent.matchedPoint = matchedPoint;
-                            snappedEvent.observedPoint = observedPoint;
+                            if(debug) {
+                                snappedEvent.matchedPoint = matchedPoint;
+                                snappedEvent.observedPoint = observedPoint;
+                            }
 
                             snappedEvent.eventData = eventData.get(endTime);
 
@@ -135,12 +146,17 @@ public class VehicleState {
                                     speedEvent.time = endTime;
 
                                     output.addSpeedEvent(speedEvent);
+
                                     this.speedEventMaxTime = endTime;
                                 }
                             }
                         }
                         else {
                             // deal with match failures
+                            if(observedPoint == null) {
+                                com.esri.core.geometry.Point samplePoint = kState.samples().get(i).point();
+                                observedPoint = new Point(samplePoint.getX(), samplePoint.getY());
+                            }
                             output.failedPoints.add(observedPoint);
                         }
                     }

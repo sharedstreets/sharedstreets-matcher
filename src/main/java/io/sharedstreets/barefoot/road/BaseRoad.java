@@ -47,7 +47,8 @@ public class BaseRoad implements Serializable {
             return nextId;
         }
 
-        public Long getId(String key) {
+        public synchronized Long getId(String key) {
+
 
             if (!keyMap.containsKey(key)) {
                 long id = getNextId();
