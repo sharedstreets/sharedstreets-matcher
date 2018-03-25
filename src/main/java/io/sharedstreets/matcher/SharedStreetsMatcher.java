@@ -27,6 +27,7 @@ import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.event.ItemEvent;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Set;
@@ -127,7 +128,7 @@ public class SharedStreetsMatcher extends Matcher implements Serializable {
                                 InputEvent item = value.f2;
 
                                 if(matchOutput.id == null)
-                                    matchOutput.id = item.vehicleId.toString();
+                                    matchOutput.id = InputEvent.vehicleIdLongMap.get((item.vehicleId));
 
                                 inputCount++;
                                 sequenceCount++;

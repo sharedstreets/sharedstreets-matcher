@@ -6,7 +6,6 @@ import com.esri.core.geometry.Polyline;
 import com.jsoniter.output.JsonStream;
 import io.sharedstreets.barefoot.road.BaseRoad;
 import io.sharedstreets.matcher.MatcherFactory;
-import io.sharedstreets.matcher.VehicleState;
 import io.sharedstreets.matcher.model.Point;
 import io.sharedstreets.matcher.output.json.GeoJSONData;
 
