@@ -17,7 +17,7 @@ Data about events are snapped to specific locations along the roadway and aggreg
 
 Download the latest pre-built binaries from the[ Github Releases](https://github.com/sharedstreets/sharedstreets-matcher/releases) tab above
 
-Prepare input data from GPX traces. Converts sample GPX traces to SharedStreets input file `osm_gpx/event_data` and generates a list of SharedStreets tiles needed to build map `osm_gpx/tile_set.txt`.
+Prepare input data from GPX traces. Converts sample GPX traces to SharedStreets input file (`osm_gpx/event_data`) and generates a list of SharedStreets tiles needed to build map (`osm_gpx/tile_set.txt`).
 
 ```java -jar [path/to]/ingest-1.0.jar  --input sample_data/gpx --output osm_gpx/ --type gpx -speeds```
 
@@ -34,7 +34,7 @@ xargs -n 1 curl -O < ../tile_set.txt
 # Ubuntu 
 wget -i ../tile_set.txt 
 
-mkdir ../
+cd ../
 ```
 
 Copy map matcher configuration to local directory
@@ -49,7 +49,7 @@ Run map matching system
 java -jar [path/to]/sharedstreets-matcher-1.0.jar --input ./event_data --map ./map_tiles --output  ./output_tiles  --debug  ./debug
 ```
 
-Open debug trace files using [GeoJson.io](http://geojson.io/). Colored street edges show travel speed, and blue and red tick marks alone edges show GPS relationship to matched point along street edge. Red tick marks are "failed matches" due to GPS or map errors (image below shows red ticks caused by missing OSM edges).
+Open debug trace files using [GeoJson.io](http://geojson.io/). Colored street edges show travel speed, and blue and red tick marks along edges show GPS relationship to matched point along street edge. Red tick marks are "failed matches" due to GPS or map errors (image below shows red ticks caused by missing OSM edges).
 
 ![Traffic Map](docs/images/debug_trace.png)
 
@@ -65,7 +65,7 @@ The SharedStreets Matcher imports GPS records containing:
 *  event type (optional label for snapped events e.g. `PICKUP`)
 *  event value (optional numeric value corresponding with event)
 
-Before matching, GPS data needs to be imported and converted to the SharedStreets event input format. The ingest tool reads trace data from CSV, JSON, and GPX file formats and exports a normalized input data set for use by the matcher `[output_dir]/event_data`. The ingest tool also identifies the map tiles needed to match against the input traces and generates a list of SharedStreets tile URLS `[output_dir]/tile_set.txt`.
+Before matching, GPS data needs to be imported and converted to the SharedStreets event input format. The ingest tool reads trace data from CSV, JSON, and GPX file formats and exports a normalized input data set for use by the matcher (`[output_dir]/event_data`). The ingest tool also identifies the map tiles needed to match against the input traces and generates a list of SharedStreets tile URLS (`[output_dir]/tile_set.txt`).
 
 ##### CSV data
 
@@ -75,11 +75,11 @@ Ingest tool imports CSV data using the format:
 
 A single CSV file can contain multiple interleaved traces, as long as each vehicle is uniquely identified within the file. The order of the records in the CSV file does not impact map matching, as records are sorted by time for each group of vehicle IDs.  
 
-There are two example CSV files in the `sample_data/csv`.  The file `csv_trace1` contains a complete trace with GPS speed data in the optional event data columns. The file `csv_trace2` is the same trace but contains a "PICKUP" and "DROPOFF" event. These location events are included as points in the debug trace output (see image below).
+There are two example CSV files in the directory `sample_data/csv`.  The file `csv_trace1` contains a complete trace with GPS speed data in the optional event data columns. The file `csv_trace2` is the same trace but contains a "PICKUP" and "DROPOFF" event. These location events are included as points in the debug trace output (see image below).
 
 Command to load CSV data:
-`java -jar [path/to]/ingest-1.0.jar  --input sample_data/csv/csv_trace1.csv --output csv_gpx/ --type csv`
 
+```java -jar [path/to]/ingest-1.0.jar  --input sample_data/csv/csv_trace1.csv --output csv_gpx/ --type csv```
 
 
 ![Traffic Map](docs/images/pickup_event_trace.png)
@@ -88,7 +88,9 @@ Command to load CSV data:
 
 The ingest application can import a directory of GPX files, with each file containing a single vehicle trace. Vehicle events can be flagged in the trace by using the waypoint tag: `<wpt name="[event_type]">...</wpt>`
 
-Command to load GPX data: `java -jar [path/to]/ingest-1.0.jar  --input sample_data/gpx --output osm_gpx/ --type gpx -speeds`
+Command to load GPX data: 
+
+```java -jar [path/to]/ingest-1.0.jar  --input sample_data/gpx --output osm_gpx/ --type gpx -speeds```
 
 
 ### Build from source
@@ -96,7 +98,8 @@ Command to load GPX data: `java -jar [path/to]/ingest-1.0.jar  --input sample_da
 Prebuilt jar files for the ingest and matching tool are available in the [Github Releases](https://github.com/sharedstreets/sharedstreets-matcher/releases) tab above. Building from source requires Gradle v 3.x and JDK 1.8+. 
 
 Both jar files can be built using the command:
-`gradle build allJars` 
+
+```gradle build allJars```
 
 
 ### How does it work?
