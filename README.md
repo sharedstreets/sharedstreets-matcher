@@ -49,7 +49,7 @@ Run map matching system
 java -jar [path/to]/sharedstreets-matcher-1.0.jar --input ./event_data --map ./map_tiles --output  ./output_tiles  --debug  ./debug
 ```
 
-Open debug trace files using [GeoJson.io](http://geojson.io/). Colored street edges show travel speed, and blue and red tick marks alone edges show GPS relationship to matched point along street edge. Red tick marks are "failed matches" due to GPS or map errors (image below shows red ticks caused by missing OSM edges).
+Open debug trace files using [GeoJson.io](http://geojson.io/). Colored street edges show travel speed, and blue and red tick marks along edges show GPS relationship to matched point along street edge. Red tick marks are "failed matches" due to GPS or map errors (image below shows red ticks caused by missing OSM edges).
 
 ![Traffic Map](docs/images/debug_trace.png)
 
