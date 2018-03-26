@@ -291,6 +291,8 @@ public class MatchOutput extends GeoJSONData {
             params.put("speed", snappedEvent.speed);
             params.put("sequenceprob", snappedEvent.sequenceProbability);
             params.put("filterprob", snappedEvent.filterProbability);
+            params.put("referenceId", BaseRoad.IDs.getKey(snappedEvent.edgeId));
+            params.put("edgeFraction", snappedEvent.edgeFraction);
 
             addGeoJSONPoint(jsonStream, snappedEvent.matchedPoint, "#0000ff", params);
 
