@@ -128,7 +128,7 @@ When using the `--dust` option, the SharedStreets matcher tracks the location of
 
 
 ### Data model 
-To protect privacy and aid analysis applications SharedStreets does not store individual events in result data sets. Instead SharedStreets uses a variety of data aggregation techniques that build on the SharedStreets referencing system.
+To both protect privacy and simplify analysis applications SharedStreets does not store individual events in output data sets. Instead SharedStreets uses a variety of spatial and temporal aggregation techniques that build on the SharedStreets referencing system.
 
 ##### Speeds
 
