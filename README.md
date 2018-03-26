@@ -110,7 +110,7 @@ The internal map matching engine is derived from [BMW's Barefoot map matching li
 
 ### Speed Validation
 
-SharedStreets Matcher can be validated using any GPS data source with measured roadway speeds or odometer distances. Keeping in mind instantaneous measures of vehicle speed will differ from average point-to-point speeds generated from map matching, speeds recorded by the GPS device are a useful starting point for validation of the map matching engine. Odometer data allow more precise comparison of matched traces against actual distance traveled.
+SharedStreets Matcher can be validated using any GPS data source that measures roadway speeds or odometer distances. Keeping in mind instantaneous measures of vehicle speed will differ from average point-to-point speeds generated from map matching, speeds recorded by the GPS device are a useful starting point for validation of the map matching engine. Odometer data allow more precise comparison of matched traces against actual distance traveled.
 
 Speed information contained in GPX trace data can be imported using the `-speeds` flag during the ingest step. Subsequent debug trace output from the matcher will show both the matched speed and the imported GPS speed. 
  
