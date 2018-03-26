@@ -15,6 +15,8 @@ Data about events are snapped to specific locations along the roadway and aggreg
 
 #### Quick start
 
+Download the latest pre-built binaries from the[ Github Releases](https://github.com/sharedstreets/sharedstreets-matcher/releases) tab above
+
 Prepare input data from GPX traces. Converts sample GPX traces to SharedStreets input file `osm_gpx/event_data` and generates a list of SharedStreets tiles needed to build map `osm_gpx/tile_set.txt`.
 
 ```java -jar [path/to]/ingest-1.0.jar  --input sample_data/gpx --output osm_gpx/ --type gpx -speeds```
@@ -91,7 +93,7 @@ Command to load GPX data: `java -jar [path/to]/ingest-1.0.jar  --input sample_da
 
 ### Build from source
 
-Prebuilt jar files for the ingest and matching tool are available in the Github Release tab above. Building from source requires Gradle v 3.x and JDK 1.8+. 
+Prebuilt jar files for the ingest and matching tool are available in the [Github Releases](https://github.com/sharedstreets/sharedstreets-matcher/releases) tab above. Building from source requires Gradle v 3.x and JDK 1.8+. 
 
 Both jar files can be built using the command:
 `gradle build allJars` 
