@@ -97,12 +97,10 @@ public class VehicleState {
 
                         if (eventData.containsKey(endTime)) {
 
-                            double edgeFraction = candidate.transition().route().target().fraction();
-
                             SnappedEvent snappedEvent = new SnappedEvent();
 
                             snappedEvent.edgeId = candidate.transition().route().target().edge().edgeReferenceId();
-                            snappedEvent.edgeFraction = edgeFraction;
+                            snappedEvent.edgeFraction = candidate.transition().route().target().fraction();
                             snappedEvent.time = endTime;
                             snappedEvent.speed = speed;
                             snappedEvent.filterProbability = candidate.filtprob();
