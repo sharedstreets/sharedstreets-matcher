@@ -4,7 +4,7 @@ A tool for converting GPS traces into traffic speed and location observations li
 
 ![Traffic Map](docs/images/traffic_example.png)
 
-#### Concepts
+#### Concept
 
 SharedStreets uses map-matched GPS points to generate data on roadway traffic speeds, and to aggregate events along streets (e.g. pick-ups/drop-offs, hard braking, etc.). Data points are snapped to the roadway network, recording the location along a given street and the direction of travel.  
 
@@ -15,7 +15,7 @@ Data about events are snapped to specific locations along the roadway and aggreg
 
 #### Quick start
 
-Prepare input data from GPX traces. Converts sample GPX traces to SharedStreets input file (osm_gpx/event_data) and generates a list of SharedStreets tiles needed to build map (osm_gpx/tile_set.txt.
+Prepare input data from GPX traces. Converts sample GPX traces to SharedStreets input file `osm_gpx/event_data` and generates a list of SharedStreets tiles needed to build map `osm_gpx/tile_set.txt`.
 
 ```java -jar [path/to]/ingest-1.0.jar  --input sample_data/gpx --output osm_gpx/ --type gpx -speeds```
 
@@ -54,11 +54,37 @@ Open debug trace files using [GeoJson.io](http://geojson.io/). Colored street ed
 
 #### Preparing GPS data
 
+The SharedStreets Matcher imports GPS records containing:
+
+*  vehicle id (string ID unique to data set)
+*  timestamp ([ISO 8061](https://en.wikipedia.org/wiki/ISO_8601) date string or UNIX timestamp in milliseconds GMT)
+*  latitude (WGS84 decimal degrees)
+*  longitude (WGS84 decimal degrees)
+*  event type (optional label for snapped events e.g. `PICKUP`)
+*  event value (optional numeric value corresponding with event)
+
+Before matching, GPS data needs to be imported and converted to the SharedStreets event input format. The ingest tool reads trace data from CSV, JSON, and GPX file formats and exports a normalized input data set for use by the matcher `[output_dir]/event_data`. The ingest tool also identifies the map tiles needed to match against the input traces and generates a list of SharedStreets tile URLS `[output_dir]/tile_set.txt`.
+
+##### CSV data
+
+Ingest tool imports CSV data using the format:
+
+`[vehicle_id],[time],[lat],[lon],[optional_event_name],[optional_event_value]`.
+
+There are two example CSV files in the `sample_data/csv`. The file `csv_trace1` contains a complete trace with GPS speed data in the optional event data columns. The file `csv_trace1` is the same trace but contains a "PICKUP" and "DROPOFF" event. These location events are included as points in the debug trace output (see image below)
+
+
+![Traffic Map](docs/images/pickup_event_trace.png)
+
+##### GPX data
+
+	```java -jar [path/to]/ingest-1.0.jar  --input sample_data/gpx --output osm_gpx/ --type gpx -speeds```
+
 
 
 #### How does it work?
 
-The matcher uses a probabilistic (HMM) model to track GPS points and find the most likely placement and route for each point. By finding likely routes between points ambiguous and imprecise GPS points can be snapped to specific road segments, indicating direction of travel and distance between points over the road network. 
+The matcher uses a probabilistic (HMM) model to_track GPS points and find the most likely placement and route for each point. By finding likely routes between points ambiguous and imprecise GPS points can be snapped to specific road segments, indicating direction of travel and distance between points over the road network. 
 
 ![Traffic Map](docs/images/gps_events.png)
 
