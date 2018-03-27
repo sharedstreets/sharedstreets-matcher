@@ -137,7 +137,7 @@ Event data along street edges are aggregated using a "binned" linear reference. 
 ```
 	Reference Length = 100m
 	Number of bins = 5
-   ====*====*====*====*====
+   ====|====|====|====|====
      0    1    2    3    4   = bin position (20m/bin)
      4    8    0    2    0   = bin value (count of grouped linear features)
 ```
