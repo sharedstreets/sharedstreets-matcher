@@ -78,6 +78,12 @@ public class BatchMatcher {
                 .withArgName("DUST-DIR")
                 .create() );
 
+        options.addOption( OptionBuilder.withLongOpt( "eventType" )
+                .withDescription( "name for event output" )
+                .hasArg()
+                .withArgName("EVENT-TYPE")
+                .create() );
+
 
         options.addOption("f", "fast snap method" );
 
@@ -91,6 +97,8 @@ public class BatchMatcher {
 
         String dustPath = "dust/";
 
+        String eventTypeTmp = "events";
+
         boolean fastSnap = false;
         boolean debug = false;
         boolean dust = false;
@@ -103,34 +111,32 @@ public class BatchMatcher {
 
             // validate that block-size has been set
             if( line.hasOption( "map" ) ) {
-                // print the value of block-size
                 mapTilePath = line.getOptionValue( "map" );
             }
 
             if( line.hasOption( "input" ) ) {
-                // print the value of block-size
                 inputPath = line.getOptionValue( "input" );
             }
 
             if( line.hasOption( "output" ) ) {
-                // print the value of block-size
                 outputPath = line.getOptionValue( "output" );
             }
 
             if( line.hasOption( "debug" ) ) {
-                // print the value of block-size
                 debug = true;
                 debugPath = line.getOptionValue( "debug" );
             }
 
             if( line.hasOption( "dust" ) ) {
-                // print the value of block-size
                 dust = true;
                 dustPath = line.getOptionValue( "dust" );
             }
 
+            if( line.hasOption( "eventType" ) ) {
+                eventTypeTmp = line.getOptionValue( "eventType" );
+            }
+
             if( line.hasOption( "binSize" ) ) {
-                // print the value of block-size
                 paramEventBinSize = Integer.parseInt(line.getOptionValue( "binSize" ));
             }
 
@@ -147,7 +153,7 @@ public class BatchMatcher {
         }
 
         final int eventBinSize = paramEventBinSize; // bin size for event aggregation (in meters)
-
+        final String eventType = eventTypeTmp; // eventType string
 
         logger.info("Setting up matching engine");
 
@@ -246,7 +252,7 @@ public class BatchMatcher {
                     referencePoints.add(geometry.getPoint(0));
                     referencePoints.add(geometry.getPoint(geometry.getPointCount() - 1));
 
-                    SharedStreetsEventData data = new SharedStreetsEventData(referenceId, referencePoints, binnedData);
+                    SharedStreetsEventData data = new SharedStreetsEventData(eventType, referenceId, referencePoints, binnedData);
 
                     out.collect(data);
                 }
@@ -423,7 +429,7 @@ public class BatchMatcher {
                     referencePoints.add(geometry.getPoint(0));
                     referencePoints.add(geometry.getPoint(geometry.getPointCount() - 1));
 
-                    SharedStreetsEventData data = new SharedStreetsEventData(referenceId, referencePoints, binnedData);
+                    SharedStreetsEventData data = new SharedStreetsEventData(eventType, referenceId, referencePoints, binnedData);
 
                     out.collect(data);
                 }

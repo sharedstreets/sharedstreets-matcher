@@ -29,7 +29,7 @@ public abstract class TiledNIOFileOutputFormat<IT> extends RichOutputFormat<IT> 
         NIOFileObject(String filePath) throws IOException {
 
             try {
-                stream = new FileOutputStream(filePath);
+                stream = new FileOutputStream(filePath, true);
                 channel = stream.getChannel();
             } catch(Exception ex) {
 
@@ -146,7 +146,7 @@ public abstract class TiledNIOFileOutputFormat<IT> extends RichOutputFormat<IT> 
         if(week != null)
             weekString = week.toString();
 
-        Path directoryPath = FileSystems.getDefault().getPath(this.outputFilePath,  weekString);
+        Path directoryPath = FileSystems.getDefault().getPath(this.outputFilePath,  weekString, recordType);
 
         if(!directoryPath.toFile().exists()){
             directoryPath.toFile().mkdirs();

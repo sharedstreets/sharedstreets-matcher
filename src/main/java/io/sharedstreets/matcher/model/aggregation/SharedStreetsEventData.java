@@ -18,16 +18,19 @@ public class SharedStreetsEventData extends TilableData {
     Set<com.esri.core.geometry.Point> referencePoints;
     WeeklyBinnedLinearEvents binnedEvents;
 
-    public SharedStreetsEventData(String referenceId, Set<com.esri.core.geometry.Point> referencePoints, WeeklyBinnedLinearEvents binnedEvents) {
+    String eventType = "event";
+
+    public SharedStreetsEventData(String eventType, String referenceId, Set<com.esri.core.geometry.Point> referencePoints, WeeklyBinnedLinearEvents binnedEvents) {
 
         this.referenceId = referenceId;
         this.referencePoints = referencePoints;
         this.binnedEvents = binnedEvents;
+        this.eventType = eventType;
     }
 
     @Override
     public String getType() {
-        return "events";
+        return eventType;
     }
 
     @Override
