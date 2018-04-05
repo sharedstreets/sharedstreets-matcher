@@ -236,9 +236,7 @@ public class BatchMatcher {
                             double length = SharedStreetsMatcher.spatial.length(geometry);
                             int numBins = (int)Math.floor(length / eventBinSize) + 1;
 
-                            // todo split weeks
-                            Week week = new Week();
-                            binnedData = new WeeklyBinnedLinearEvents(numBins, length, week);
+                            binnedData = new WeeklyBinnedLinearEvents(numBins, length, null);
                         }
 
                         PeriodicTimestamp periodicTimestamp = PeriodicTimestamp.utcPeriodTimestamp(snappedEvent.time);
