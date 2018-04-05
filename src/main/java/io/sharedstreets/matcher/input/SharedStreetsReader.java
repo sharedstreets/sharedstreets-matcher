@@ -26,6 +26,7 @@ public class SharedStreetsReader implements RoadReader {
     private Path tilePath;
     private Iterator<Path> fileIterator;
     private SharedStreetsGeometryIterator currentTileIterator = null;
+    private String currentTileName  = "";
 
     class SharedStreetsGeometryIterator {
 
@@ -137,7 +138,9 @@ public class SharedStreetsReader implements RoadReader {
                     nextFile = null;
 
                 if (nextFile != null) {
+                    currentTileName = nextFile.getFileName().toString();
                     InputStream is = new FileInputStream(nextFile.toFile());
+
 
                     this.currentTileIterator = new SharedStreetsGeometryIterator(is);
                 }
@@ -145,7 +148,7 @@ public class SharedStreetsReader implements RoadReader {
 
         }
         catch (IOException ex) {
-            throw new SourceException("Could not load tiles: " + ex.getLocalizedMessage());
+            System.err.print("Could not load tiles: " + ex.getLocalizedMessage());
         }
     }
 
@@ -161,12 +164,14 @@ public class SharedStreetsReader implements RoadReader {
 
     @Override
     public BaseRoad next() throws SourceException {
-        try {
-            BaseRoad baseRoad = null;
 
-            while (currentTileIterator != null) {
+        BaseRoad baseRoad = null;
 
+        while (currentTileIterator != null) {
+
+            try {
                 while(currentTileIterator.hasNext()){
+
 
                     SharedStreetGeometry geom = currentTileIterator.next();
 
@@ -180,13 +185,12 @@ public class SharedStreetsReader implements RoadReader {
 
                     return baseRoad;
                 }
-
-                openNextTile();
+            }
+            catch (IOException ex) {
+                System.err.print("Could not load tiles: " + ex.getLocalizedMessage() + " (" + this.currentTileName + ")\n");
             }
 
-        }
-        catch (IOException ex) {
-            throw new SourceException("Could not load tiles: " + ex.getLocalizedMessage());
+            openNextTile();
         }
 
         return null;
