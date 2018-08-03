@@ -1,6 +1,7 @@
 package io.sharedstreets.matcher.ingest;
 
 import io.sharedstreets.matcher.ingest.input.CsvEventExtractor;
+import io.sharedstreets.matcher.ingest.input.DcfhvEventExtractor;
 import io.sharedstreets.matcher.ingest.input.JsonEventExtractor;
 import io.sharedstreets.matcher.ingest.input.gpx.GpxInputFormat;
 import io.sharedstreets.matcher.ingest.model.Ingest;
@@ -50,13 +51,32 @@ public class Ingester {
                 .withArgName("OUTPUT-DIR")
                 .create() );
 
+        options.addOption( OptionBuilder.withLongOpt( "tileUrl" )
+                .withDescription( "url for map tiles " )
+                .hasArg()
+                .withArgName("TILE-URL")
+                .create() );
+
+        options.addOption( OptionBuilder.withLongOpt( "tileLevel" )
+                .withDescription( "" )
+                .hasArg()
+                .withArgName("TILE-LEVEL")
+                .create() );
+
         options.addOption("speeds", "track GPS speed when available");
+        options.addOption("verbose", "verbose error output" );
 
         String inputPath = "";
 
         String outputPath = "";
 
         String inputType = "";
+
+        String tileLevel = "6";
+
+        boolean verbose = false;
+
+        String tileUrl = "https://tiles.sharedstreets.io/osm/planet-180312/";
 
         boolean gpsSpeeds = false;
 
@@ -81,6 +101,20 @@ public class Ingester {
                 gpsSpeeds = true;
             }
 
+            if( line.hasOption( "verbose" ) ) {
+                verbose = true;
+            }
+
+            if( line.hasOption( "tileUrl" ) ) {
+                // print the value of block-size
+                tileUrl = line.getOptionValue( "tileUrl" ).trim();;
+            }
+
+            if( line.hasOption( "tileLevel" ) ) {
+                // print the value of block-size
+                tileLevel = line.getOptionValue( "tileLevel" ).trim();;
+            }
+
             if( line.hasOption( "type" ) ) {
                 // print the value of block-size
                 inputType = line.getOptionValue( "type" ).trim().toUpperCase();
@@ -93,6 +127,8 @@ public class Ingester {
                     inputType = "JSON";
                 else if(fileParts[fileParts.length-1].toLowerCase().equals("gpx"))
                     inputType = "GPX";
+                else if(fileParts[fileParts.length-1].toLowerCase().equals("dcfhv"))
+                    inputType = "DCFHV";
             }
 
         }
@@ -105,6 +141,9 @@ public class Ingester {
         }
 
         final String finalInputType = inputType;
+        final String finalTileUrl = tileUrl;
+        final String finalTileLevel = tileLevel;
+        final boolean finalVerbose = verbose;
 
         // let's go...
 
@@ -124,7 +163,7 @@ public class Ingester {
         DataSet<InputEvent> inputEvents = null;
 
         if (finalInputType.equals("GPX")) {
-            inputEvents = env.createInput(new GpxInputFormat(inputPath, gpsSpeeds));
+            inputEvents = env.createInput(new GpxInputFormat(inputPath, gpsSpeeds, finalVerbose));
         }
         else {
             DataSet<String> inputStream = env.readTextFile(inputPath);
@@ -136,13 +175,18 @@ public class Ingester {
                 public void flatMap(String value, Collector<InputEvent> out) throws Exception {
 
                     if (finalInputType.equals("CSV")) {
-                        List<InputEvent> inputEvents = CsvEventExtractor.extractEvents(value);
+                        List<InputEvent> inputEvents = CsvEventExtractor.extractEvents(value, finalVerbose);
 
                         for (InputEvent inputEvent : inputEvents)
                             out.collect(inputEvent);
 
                     } else if (finalInputType.equals("JSON")) {
-                        List<InputEvent> inputEvents = JsonEventExtractor.extractEvents(value);
+                        List<InputEvent> inputEvents = JsonEventExtractor.extractEvents(value, finalVerbose);
+
+                        for (InputEvent inputEvent : inputEvents)
+                            out.collect(inputEvent);
+                    } else if (finalInputType.equals("DCFHV")) {
+                        List<InputEvent> inputEvents = DcfhvEventExtractor.extractEvents(value, finalVerbose);
 
                         for (InputEvent inputEvent : inputEvents)
                             out.collect(inputEvent);
@@ -166,7 +210,7 @@ public class Ingester {
             @Override
             public String map(TileId value) throws Exception {
                 // TODO allow selection of tile build -- defaulting to current build for moment
-                return "https://tiles.sharedstreets.io/planet-180312/" + value.toString() + ".geometry.pbf";
+                return finalTileUrl + value.toString() + ".geometry." + finalTileLevel + ".pbf";
             }
         });
 

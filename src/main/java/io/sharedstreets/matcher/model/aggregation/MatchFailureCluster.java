@@ -37,19 +37,14 @@ public class MatchFailureCluster extends TilableData {
 
         mapDust.setStartId(this.startEdgeId);
 
-        HashMap<Long, Dust.MapDustTrace.Builder> traces = new HashMap<>();
+      for(MatchFailure failure : failures) {
 
-        for(MatchFailure failure : failures) {
-
-            if(!traces.containsKey(failure.endEdgeId)){
-                Dust.MapDustTrace.Builder dustTrace = Dust.MapDustTrace.newBuilder();
-                dustTrace.setEndId(BaseRoad.IDs.getKey(failure.endEdgeId));
-                traces.put(failure.endEdgeId,dustTrace);
-            }
 
             Dust.MapDustTrace.Builder dustTrace = Dust.MapDustTrace.newBuilder();
             dustTrace.addStartFraction(failure.startEdgeFraction);
             dustTrace.addEndFraction(failure.endEdgeFraction);
+            dustTrace.setEndId(BaseRoad.IDs.getKey(failure.endEdgeId));
+
             for(Point point : failure.failedPoints) {
                 dustTrace.addLonlats(point.lon);
                 dustTrace.addLonlats(point.lat);

@@ -59,6 +59,11 @@ public class BaseRoad implements Serializable {
             return keyMap.get(key);
         }
 
+        public synchronized boolean hasId(String key) {
+
+            return keyMap.containsKey(key);
+        }
+
         public Polyline getGeom(long id) { return geomMap.get(id); }
         public String getKey(long id){
             return idMap.get(id);

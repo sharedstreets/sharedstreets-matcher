@@ -22,11 +22,18 @@ import io.sharedstreets.barefoot.spatial.RTreeIndex;
 import io.sharedstreets.barefoot.spatial.SpatialIndex;
 import io.sharedstreets.barefoot.topology.Graph;
 import io.sharedstreets.barefoot.util.SourceException;
+import io.sharedstreets.matcher.input.SharedStreetsReader;
+import io.sharedstreets.matcher.output.tiles.TileId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Executable;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Implementation of a road map with (directed) roads, i.e. {@link RoadEdge} objects. It provides a road
@@ -37,15 +44,33 @@ import java.util.*;
  * identifiers have a special mapping, see {@link RoadEdge}.
  */
 public class RoadMap extends Graph<RoadEdge> implements Serializable {
+
+    private final String tileSource;
+    private final String tmpTilePath;
+
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(RoadMap.class);
     private transient Index index = null;
 
     private transient ArrayList<BaseRoad> roads;
+    private ReentrantReadWriteLock mapLock;
+    private Set<TileId> loadedTiles;
 
     static Collection<RoadEdge> split(BaseRoad base) {
         List<RoadEdge> roads = base.getEdges();
         return roads;
+    }
+
+    public RoadMap(String tmpTilePath, String tileSource) {
+
+        this.tmpTilePath = tmpTilePath;
+
+        this.tileSource = tileSource;
+
+        index = new Index();
+        roads = new ArrayList<>();
+        mapLock = new ReentrantReadWriteLock();
+        loadedTiles = new HashSet<TileId>();
     }
 
     public class Index  {
@@ -77,6 +102,55 @@ public class RoadMap extends Graph<RoadEdge> implements Serializable {
         return this.index;
     }
 
+    public void readLock() {
+        this.mapLock.readLock().lock();
+    }
+
+    public void readUnlock() {
+        this.mapLock.readLock().unlock();
+    }
+
+    public void loadTile(TileId tileId) throws IOException {
+
+        if(loadedTiles.contains(tileId))
+            return;
+
+        try {
+
+            mapLock.writeLock().lock();
+
+            // check cache status again...
+            if(loadedTiles.contains(tileId))
+                return;
+
+            SharedStreetsReader sharedStreetsReader = new SharedStreetsReader(this.tmpTilePath, this.tileSource, tileId);
+
+            sharedStreetsReader.open();
+
+            BaseRoad newRoad = null;
+            ArrayList<BaseRoad> tileRoads = new ArrayList<>();
+
+            while ((newRoad = sharedStreetsReader.next()) != null) {
+                roads.add(newRoad);
+                index.put(newRoad);
+                for (RoadEdge edge : split(newRoad)) {
+                    this.add(edge);
+                }
+            }
+
+            sharedStreetsReader.close();
+
+            loadedTiles.add(tileId);
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            mapLock.writeLock().unlock();
+        }
+
+    }
+
     /**
      * Loads and creates a {@link RoadMap} object from {@link BaseRoad} objects loaded with a
      * {@link RoadReader}.
@@ -98,9 +172,8 @@ public class RoadMap extends Graph<RoadEdge> implements Serializable {
 
         logger.info("inserting roads ...");
 
-        RoadMap roadmap = new RoadMap();
+        RoadMap roadmap = new RoadMap(null, null);
 
-        roadmap.roads = new ArrayList<>();
 
         int geometryCount = 0, counter = 0;
         BaseRoad baseRoad = null;
@@ -137,8 +210,6 @@ public class RoadMap extends Graph<RoadEdge> implements Serializable {
         memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
         logger.info("index and topology constructing ...");
-
-        index = new Index();
 
         for(BaseRoad baseRoad : this.roads) {
 

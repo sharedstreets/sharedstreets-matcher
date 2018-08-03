@@ -1,21 +1,25 @@
-package io.sharedstreets.matcher.model.input.dcfhv;
+package io.sharedstreets.matcher.ingest.input;
 
 import com.jsoniter.JsonIterator;
 import com.jsoniter.ValueType;
-import io.sharedstreets.matcher.model.events.InputEvent;
-import io.sharedstreets.matcher.model.Point;
+import io.sharedstreets.matcher.ingest.model.InputEvent;
+import io.sharedstreets.matcher.ingest.model.Point;
 import org.apache.commons.lang3.time.FastDateFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class DcfhvEventExtractor {
 
-    static FastDateFormat formatter = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss");
 
-    static InputEvent parseJsonLocation(String value) {
+    static Logger logger = LoggerFactory.getLogger(DcfhvEventExtractor.class);
+
+    static FastDateFormat formatter = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"));
+
+    static InputEvent parseJsonLocation(String value, boolean verbose) {
 
         try {
             InputEvent event = new InputEvent();
@@ -44,12 +48,14 @@ public class DcfhvEventExtractor {
 
             return event;
         } catch (Exception e) {
+            if(verbose)
+                logger.error("Unable to parse line: " + value);
             return null;
         }
 
     }
 
-    public static List<InputEvent> extractEvents(String value) throws IOException, ParseException {
+    public static List<InputEvent> extractEvents(String value, boolean verbose) throws IOException, ParseException {
 
         // replace Excel quote escaping
         String cleanString = value.replace("\"{", "{").replace("}\"", "}").replace("\"\"", "\"");
@@ -88,25 +94,51 @@ public class DcfhvEventExtractor {
 
         ArrayList list = new ArrayList<InputEvent>();
 
-        if(!parts[0].equals("ID")) {
+        if(parts.length > 21 && !parts[0].equals("ID")) {
 
-            InputEvent pickupEvent = parseJsonLocation(parts[18]);
+            InputEvent pickupEvent = parseJsonLocation(parts[18], verbose);
 
             if(pickupEvent != null) {
-                pickupEvent.vehicleId = parts[21];
-                pickupEvent.time = formatter.parse(parts[5].split("\\.")[0]).getTime();
-                pickupEvent.eventType = "PICKUP";
-                list.add(pickupEvent);
+                Date date = formatter.parse(parts[5].split("\\.")[0]);
+
+                if (date.getDate() == 10 || date.getDate() == 11) {
+                    pickupEvent.eventData = new HashMap<>();
+                    pickupEvent.vehicleId = parts[21];
+                    pickupEvent.time = date.getTime();
+                    pickupEvent.eventData.put("pickup", null);
+                    list.add(pickupEvent);
+                }
+                else {
+                    if(verbose)
+                        logger.error("Unable to parse line: " + value);
+
+                }
             }
 
-            InputEvent dropoffEvent = parseJsonLocation(parts[19]);
+            InputEvent dropoffEvent = parseJsonLocation(parts[19], verbose);
 
             if(dropoffEvent != null) {
-                dropoffEvent.vehicleId = parts[21];
-                dropoffEvent.time = formatter.parse(parts[8].split("\\.")[0]).getTime();
-                dropoffEvent.eventType = "DROPOFF";
-                list.add(dropoffEvent);
+                Date date = formatter.parse(parts[8].split("\\.")[0]);
+
+                if (date.getDate() == 10 || date.getDate() == 11) {
+                    dropoffEvent.eventData = new HashMap<>();
+                    dropoffEvent.vehicleId = parts[21];
+                    dropoffEvent.time = date.getTime();
+                    dropoffEvent.eventData.put("dropoff", null);
+                    list.add(dropoffEvent);
+                }
+                else {
+                    if(verbose)
+                        logger.error("Unable to parse line: " + value);
+
+                }
+
             }
+        }
+        else {
+            if(verbose)
+                logger.error("Unable to parse line: " + value);
+
         }
 
 
