@@ -67,7 +67,7 @@ There are two example CSV files in the directory `sample_data/csv`.  The file `c
 Command to load CSV data:
 
 ```
-java -jar [path/to]/ingest-1.0.jar  --input sample_data/csv/csv_trace1.csv --output csv_gpx/ --type csv
+java -jar [path/to]/ingest-1.1.jar  --input sample_data/csv/csv_trace1.csv --output csv_gpx/ --type csv
 ```
 
 
@@ -80,7 +80,7 @@ The ingest application can import a directory of GPX files, with each file conta
 Command to load GPX data: 
 
 ```
-java -jar [path/to]/ingest-1.0.jar  --input sample_data/gpx --output osm_gpx/ --type gpx -speeds
+java -jar [path/to]/ingest-1.1.jar  --input sample_data/gpx --output osm_gpx/ --type gpx -speeds
 ```
 
 
