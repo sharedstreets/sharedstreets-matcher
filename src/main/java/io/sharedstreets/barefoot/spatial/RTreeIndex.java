@@ -108,20 +108,21 @@ public class RTreeIndex  {
 
             double f = spatial.intercept(entry.value().geometry(), c);
             Point p = spatial.interpolate(entry.value().geometry(), entry.value().length(), f);
-            double d = spatial.distance(p, c);
 
-            if (d > radius) {
-                continue;
+            if(p != null) {
+                double d = spatial.distance(p, c);
+
+                if (d > radius) {
+                    continue;
+                }
+
+                for(RoadEdge roadEdge : entry.value().getEdges()) {
+                    if(roadEdge.heading() == Heading.forward)
+                        neighbors.add(new RoadPoint(roadEdge, f));
+                    else
+                        neighbors.add(new RoadPoint(roadEdge, 1.0 - f));
+                }
             }
-
-            for(RoadEdge roadEdge : entry.value().getEdges()) {
-                if(roadEdge.heading() == Heading.forward)
-                    neighbors.add(new RoadPoint(roadEdge, f));
-                else
-                    neighbors.add(new RoadPoint(roadEdge, 1.0 - f));
-            }
-
-
         }
 
         return neighbors;

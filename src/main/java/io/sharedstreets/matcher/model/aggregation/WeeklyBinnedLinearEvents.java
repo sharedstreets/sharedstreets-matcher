@@ -31,7 +31,7 @@ public class WeeklyBinnedLinearEvents {
 
         binBuilder.setReferenceId(referenceId);
         binBuilder.setNumberOfBins(this.numberOfBins);
-        binBuilder.setReferenceLength(Math.round(this.length * 100)); // ship length as centimeteBinnedLinearEventsrs
+        binBuilder.setReferenceLength(Math.round(this.length * 100)); // ship length as centimeter BinnedLinearEvents
 
         for(Integer bin : this.binCountMap.keySet()) {
             SharedStreetsLinearReferencesProto.BinnedPeriodicData.Builder binnedPeriodicData = SharedStreetsLinearReferencesProto.BinnedPeriodicData.newBuilder();

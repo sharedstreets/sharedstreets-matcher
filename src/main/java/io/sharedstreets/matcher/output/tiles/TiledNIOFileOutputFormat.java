@@ -143,6 +143,7 @@ public abstract class TiledNIOFileOutputFormat<IT> extends RichOutputFormat<IT> 
     public void writeRecord(TileId tileId, Week week, String recordType, byte[] data) throws IOException {
 
         String weekString = "";
+        
         if(week != null)
             weekString = week.toString();
 

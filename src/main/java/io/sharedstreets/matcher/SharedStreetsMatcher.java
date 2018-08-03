@@ -68,6 +68,8 @@ public class SharedStreetsMatcher extends Matcher implements Serializable {
 
                 InputEvent item = value.f2;
 
+                map.loadTile(item.getTileId());
+
                 com.esri.core.geometry.Point p = new com.esri.core.geometry.Point(item.point.lon, item.point.lat);
                 Set<RoadPoint> roadPoints = map.index().radius(p, radius);
 
@@ -99,6 +101,7 @@ public class SharedStreetsMatcher extends Matcher implements Serializable {
 
                 if(snappedEvent != null)
                     out.collect(snappedEvent);
+
             }
         });
 
@@ -118,7 +121,6 @@ public class SharedStreetsMatcher extends Matcher implements Serializable {
                             VehicleState state = new VehicleState();
                             MatchOutput matchOutput = new MatchOutput();
 
-
                             Stopwatch sw = new Stopwatch();
                             sw.start();
                             int inputCount = 0;
@@ -127,56 +129,66 @@ public class SharedStreetsMatcher extends Matcher implements Serializable {
 
                                 InputEvent item = value.f2;
 
-                                if(matchOutput.id == null)
-                                    matchOutput.id = InputEvent.vehicleIdLongMap.get((item.vehicleId));
+                                map.loadTile(item.getTileId());
 
-                                inputCount++;
-                                sequenceCount++;
+                                try {
+                                    map.readLock();
 
-                                if(item.eventData != null)
-                                    state.addEventData(item.time, item.eventData);
+                                    if(matchOutput.id == null)
+                                        matchOutput.id = InputEvent.vehicleIdLongMap.get((item.vehicleId));
+
+                                    inputCount++;
+                                    sequenceCount++;
+
+                                    if(item.eventData != null)
+                                        state.addEventData(item.time, item.eventData);
 
 
-                                synchronized (state) {
+                                    synchronized (state) {
 
-                                    final MatcherSample sample = new MatcherSample(item.time, new com.esri.core.geometry.Point(item.point.lon, item.point.lat));
+                                        final MatcherSample sample = new MatcherSample(item.time, new com.esri.core.geometry.Point(item.point.lon, item.point.lat));
 
 
-                                    if (state.kState.sample() != null) {
+                                        if (state.kState.sample() != null) {
 
-                                        if (sample.time() < state.kState.sample().time()) {
-                                            logger.debug("received out of order sample");
-                                            continue;
+                                            if (sample.time() < state.kState.sample().time()) {
+                                                logger.debug("received out of order sample");
+                                                continue;
+                                            }
+                                            if (item.eventData == null && spatial.distance(sample.point(),
+                                                    state.kState.sample().point()) < Math.max(0, MatcherFactory.distance)) {
+                                                logger.debug("received sample below distance threshold");
+                                                continue;
+                                            }
+
+                                            if (item.eventData == null && (sample.time() - state.kState.sample().time()) < Math.max(0,
+                                                    MatcherFactory.minInterval)) {
+                                                logger.debug("received sample below interval threshold");
+                                                continue;
+                                            }
                                         }
-                                        if (spatial.distance(sample.point(),
-                                                state.kState.sample().point()) < Math.max(0, MatcherFactory.distance)) {
-                                            logger.debug("received sample below distance threshold");
-                                            continue;
+
+                                        final AtomicReference<Set<MatcherCandidate>> vector =
+                                                new AtomicReference<>();
+
+                                        // process sample
+                                        vector.set(matcher.execute(state.kState.vector(), state.kState.sample(), sample));
+                                        state.kState.update(vector.get(), sample);
+
+                                        // limit max sequence length TODO make configurable
+                                        if(sequenceCount > 1000) {
+                                            state.extractEvents(matchOutput, debug);
+                                            state.reset();
+                                            sequenceCount = 0;
                                         }
 
-                                        // TODO samples with event data should bypass the minInterval threshold
-                                        if ((sample.time() - state.kState.sample().time()) < Math.max(0,
-                                                MatcherFactory.minInterval)) {
-                                            logger.debug("received sample below interval threshold");
-                                            continue;
-                                        }
-                                    }
-
-                                    final AtomicReference<Set<MatcherCandidate>> vector =
-                                            new AtomicReference<>();
-
-                                    // process sample
-                                    vector.set(matcher.execute(state.kState.vector(), state.kState.sample(), sample));
-                                    state.kState.update(vector.get(), sample);
-
-                                    // limit max sequence length TODO make configurable
-                                    if(sequenceCount > 1000) {
-                                        state.extractEvents(matchOutput, debug);
-                                        state.reset();
-                                        sequenceCount = 0;
                                     }
 
                                 }
+                                finally {
+                                    map.readUnlock();
+                                }
+
                             }
 
                             if(state !=null) {

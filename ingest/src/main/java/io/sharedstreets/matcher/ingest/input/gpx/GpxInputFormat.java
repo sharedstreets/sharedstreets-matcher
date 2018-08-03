@@ -18,11 +18,13 @@ public class GpxInputFormat extends FileInputFormat<InputEvent> {
     static Logger logger = LoggerFactory.getLogger(GpxInputFormat.class);
 
     boolean gpsSpeed;
+    boolean verbose;
 
-    public GpxInputFormat(String path, boolean gpsSpeed) {
+    public GpxInputFormat(String path, boolean gpsSpeed, boolean verbose) {
         super();
         this.filePath = new Path(path);
         this.gpsSpeed = gpsSpeed;
+        this.verbose = verbose;
     }
 
     @Override

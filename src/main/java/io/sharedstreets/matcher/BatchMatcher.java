@@ -4,6 +4,7 @@ import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
 import io.sharedstreets.barefoot.road.BaseRoad;
 import io.sharedstreets.barefoot.roadmap.Loader;
+import io.sharedstreets.barefoot.roadmap.RoadMap;
 import io.sharedstreets.matcher.input.Ingest;
 import io.sharedstreets.matcher.model.aggregation.*;
 import io.sharedstreets.matcher.model.Week;
@@ -42,10 +43,16 @@ public class BatchMatcher {
 
         // create the Options
         Options options = new Options();
-        options.addOption( OptionBuilder.withLongOpt( "map" )
-                .withDescription( "path to map tiles" )
+//        options.addOption( OptionBuilder.withLongOpt( "map" )
+//                .withDescription( "path to map tiles" )
+//                .hasArg()
+//                .withArgName("MAP-DIR")
+//                .create() );
+
+        options.addOption( OptionBuilder.withLongOpt( "tracker" )
+                .withDescription( "tracker.properties files" )
                 .hasArg()
-                .withArgName("MAP-DIR")
+                .withArgName("TRACKER-PATH")
                 .create() );
 
         options.addOption( OptionBuilder.withLongOpt( "input" )
@@ -64,6 +71,18 @@ public class BatchMatcher {
                 .withDescription( "path to debug output" )
                 .hasArg()
                 .withArgName("DUBUG-DIR")
+                .create() );
+
+        options.addOption( OptionBuilder.withLongOpt( "tileSource" )
+                .withDescription( "tile source" )
+                .hasArg()
+                .withArgName("TILE-SOUCCE")
+                .create() );
+
+        options.addOption( OptionBuilder.withLongOpt( "tmpTilePath" )
+                .withDescription( "tmp tile path" )
+                .hasArg()
+                .withArgName("TMP-TILE-PATH")
                 .create() );
 
         options.addOption( OptionBuilder.withLongOpt( "dust" )
@@ -87,7 +106,9 @@ public class BatchMatcher {
 
         options.addOption("f", "fast snap method" );
 
-        String mapTilePath = "";
+        String tileSource = "osm/planet-180430";
+
+        String tmpTilePath = "/tmp/shst_tiles/";
 
         String inputPath = "";
 
@@ -98,6 +119,8 @@ public class BatchMatcher {
         String dustPath = "dust/";
 
         String eventTypeTmp = "events";
+
+        String trackerPath = "tracker.properties";
 
         boolean fastSnap = false;
         boolean debug = false;
@@ -110,16 +133,28 @@ public class BatchMatcher {
             CommandLine line = parser.parse( options, args );
 
             // validate that block-size has been set
-            if( line.hasOption( "map" ) ) {
-                mapTilePath = line.getOptionValue( "map" );
-            }
+//            if( line.hasOption( "map" ) ) {
+//                mapTilePath = line.getOptionValue( "map" );
+//            }
 
             if( line.hasOption( "input" ) ) {
                 inputPath = line.getOptionValue( "input" );
             }
 
+            if( line.hasOption( "tracker" ) ) {
+                trackerPath = line.getOptionValue( "tracker" );
+            }
+
             if( line.hasOption( "output" ) ) {
                 outputPath = line.getOptionValue( "output" );
+            }
+
+            if( line.hasOption( "tileSource" ) ) {
+                tileSource = line.getOptionValue( "tileSource" );
+            }
+
+            if( line.hasOption( "tmpTilePath" ) ) {
+                tmpTilePath = line.getOptionValue( "tmpTilePath" );
             }
 
             if( line.hasOption( "debug" ) ) {
@@ -160,11 +195,11 @@ public class BatchMatcher {
         // map and matcher are stored as static globals (for the time being)
         // as workaround related to Flink serialization of speed matching reducer function
 
-        // Load and construct road map
-        SharedStreetsMatcher.map = Loader.roadmap(mapTilePath).construct();
+        // dynamically load map based on point data
+        SharedStreetsMatcher.map = new RoadMap(tmpTilePath, tileSource);
 
         // build match engine
-        SharedStreetsMatcher.matcher = MatcherFactory.createMatcher("tracker.properties", SharedStreetsMatcher.map);
+        SharedStreetsMatcher.matcher = MatcherFactory.createMatcher(trackerPath, SharedStreetsMatcher.map);
 
         logger.info("Matcher ready!");
 
@@ -236,9 +271,7 @@ public class BatchMatcher {
                             double length = SharedStreetsMatcher.spatial.length(geometry);
                             int numBins = (int)Math.floor(length / eventBinSize) + 1;
 
-                            // todo split weeks
-                            Week week = new Week();
-                            binnedData = new WeeklyBinnedLinearEvents(numBins, length, week);
+                            binnedData = new WeeklyBinnedLinearEvents(numBins, length, null);
                         }
 
                         PeriodicTimestamp periodicTimestamp = PeriodicTimestamp.utcPeriodTimestamp(snappedEvent.time);

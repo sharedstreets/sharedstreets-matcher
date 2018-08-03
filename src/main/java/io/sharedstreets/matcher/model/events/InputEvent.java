@@ -3,6 +3,7 @@ package io.sharedstreets.matcher.model.events;
 
 import io.sharedstreets.matcher.input.Ingest;
 import io.sharedstreets.matcher.model.Point;
+import io.sharedstreets.matcher.output.tiles.TileId;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -35,6 +36,10 @@ public class InputEvent implements Serializable {
     public HashMap<String, Double> eventData;
 
     public boolean included;
+
+    public TileId getTileId() {
+        return TileId.lonLatToTileId(12, point.lon, point.lat);
+    }
 
     public Ingest.InputEventProto toProto() {
 
