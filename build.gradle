@@ -1,5 +1,5 @@
 group 'io.sharedstreets'
-version '1.0'
+version '1.1'
 
 buildscript {
     repositories {  jcenter()
@@ -22,7 +22,7 @@ repositories {
     mavenCentral()
 }
 
-def flinkversion = "1.4.1"
+def flinkversion = "1.4.2"
 def protobufversion = "3.4.0"
 
 dependencies {
@@ -37,8 +37,8 @@ dependencies {
     compile "com.jsoniter:jsoniter:0.9.15"
     compile "javassist:javassist:3.12.1.GA"
     compile "net.sf.geographiclib:GeographicLib-Java:1.49"
-    compile 'org.slf4j:slf4j-api:1.7.10'
-    compile 'org.slf4j:slf4j-log4j12:1.7.10'
+    compile 'org.slf4j:slf4j-api:1.7.7'
+    compile 'org.slf4j:slf4j-log4j12:1.7.7'
     compile 'commons-cli:commons-cli:1.4'
     compile 'org.apache.commons:commons-lang3:3.7'
     compile 'com.github.davidmoten:rtree:0.8-RC10'
