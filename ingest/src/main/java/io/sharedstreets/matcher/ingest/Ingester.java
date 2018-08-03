@@ -51,17 +51,7 @@ public class Ingester {
                 .withArgName("OUTPUT-DIR")
                 .create() );
 
-        options.addOption( OptionBuilder.withLongOpt( "tileUrl" )
-                .withDescription( "url for map tiles " )
-                .hasArg()
-                .withArgName("TILE-URL")
-                .create() );
 
-        options.addOption( OptionBuilder.withLongOpt( "tileLevel" )
-                .withDescription( "" )
-                .hasArg()
-                .withArgName("TILE-LEVEL")
-                .create() );
 
         options.addOption("speeds", "track GPS speed when available");
         options.addOption("verbose", "verbose error output" );
@@ -72,11 +62,9 @@ public class Ingester {
 
         String inputType = "";
 
-        String tileLevel = "6";
 
         boolean verbose = false;
 
-        String tileUrl = "https://tiles.sharedstreets.io/osm/planet-180312/";
 
         boolean gpsSpeeds = false;
 
@@ -105,16 +93,6 @@ public class Ingester {
                 verbose = true;
             }
 
-            if( line.hasOption( "tileUrl" ) ) {
-                // print the value of block-size
-                tileUrl = line.getOptionValue( "tileUrl" ).trim();;
-            }
-
-            if( line.hasOption( "tileLevel" ) ) {
-                // print the value of block-size
-                tileLevel = line.getOptionValue( "tileLevel" ).trim();;
-            }
-
             if( line.hasOption( "type" ) ) {
                 // print the value of block-size
                 inputType = line.getOptionValue( "type" ).trim().toUpperCase();
@@ -141,8 +119,6 @@ public class Ingester {
         }
 
         final String finalInputType = inputType;
-        final String finalTileUrl = tileUrl;
-        final String finalTileLevel = tileLevel;
         final boolean finalVerbose = verbose;
 
         // let's go...
@@ -195,39 +171,39 @@ public class Ingester {
             });
         }
 
-        // create list of map tiles for input traces
-        DataSet<TileId> tileIds = inputEvents.map(new MapFunction<InputEvent, TileId>(){
-
-            @Override
-            public TileId map(InputEvent value) throws Exception {
-                return TileId.lonLatToTileId(12, value.point.lon, value.point.lat);
-            }
-
-        }).distinct();
-
-        // map IDs to tile URLs
-        DataSet<String> tileUrls = tileIds.map(new MapFunction<TileId, String>() {
-            @Override
-            public String map(TileId value) throws Exception {
-                // TODO allow selection of tile build -- defaulting to current build for moment
-                return finalTileUrl + value.toString() + ".geometry." + finalTileLevel + ".pbf";
-            }
-        });
-
-        Path mapTilePath = Paths.get(outputPath, "tile_set.txt").toAbsolutePath();
-
-        if(mapTilePath.toFile().exists()) {
-            System.out.print("File already exists: " + mapTilePath.toString());
-            return;
-        }
-
-        // write tile URLs to disk (can be read by curl "xargs -n 1 curl -O < tile_set.txt")
-        tileUrls.writeAsText(mapTilePath.toString()).setParallelism(1);
-
+//        // create list of map tiles for input traces
+//        DataSet<TileId> tileIds = inputEvents.map(new MapFunction<InputEvent, TileId>(){
+//
+//            @Override
+//            public TileId map(InputEvent value) throws Exception {
+//                return TileId.lonLatToTileId(12, value.point.lon, value.point.lat);
+//            }
+//
+//        }).distinct();
+//
+//        // map IDs to tile URLs
+//        DataSet<String> tileUrls = tileIds.map(new MapFunction<TileId, String>() {
+//            @Override
+//            public String map(TileId value) throws Exception {
+//                // TODO allow selection of tile build -- defaulting to current build for moment
+//                return finalTileUrl + value.toString() + ".geometry." + finalTileLevel + ".pbf";
+//            }
+//        });
+//
+//        Path mapTilePath = Paths.get(outputPath, "tile_set.txt").toAbsolutePath();
+//
+//        if(mapTilePath.toFile().exists()) {
+//            System.out.print("File already exists: " + mapTilePath.toString());
+//            return;
+//        }
+//
+//        // write tile URLs to disk (can be read by curl "xargs -n 1 curl -O < tile_set.txt")
+//        tileUrls.writeAsText(mapTilePath.toString()).setParallelism(1);
+//
         Path dataPath = Paths.get(outputPath, "event_data").toAbsolutePath();
 
         if(dataPath.toFile().exists()) {
-            System.out.print("File already exists: " + mapTilePath.toString());
+            System.out.print("File already exists: " + outputPath.toString());
             return;
         }
 
