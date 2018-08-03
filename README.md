@@ -17,37 +17,24 @@ Data about events are snapped to specific locations along the roadway and aggreg
 
 Download the latest pre-built binaries from the[ Github Releases](https://github.com/sharedstreets/sharedstreets-matcher/releases) tab above
 
-Prepare input data from GPX traces. Converts sample GPX traces to SharedStreets input file (`osm_gpx/event_data`) and generates a list of SharedStreets tiles needed to build map (`osm_gpx/tile_set.txt`).
+Prepare input data from GPX traces. Converts sample GPX traces to SharedStreets input file (`osm_gpx/event_data`):
 
-```java -jar [path/to]/ingest-1.0.jar  --input sample_data/gpx --output osm_gpx/ --type gpx -speeds```
-
-Download tile data -- caches map data tiles from SharedStreets global tile set (note xargs and wget milage may vary by version and OS)
-
-```
-cd osm_gpx
-mkdir map_tiles
-cd map_tiles
-
-# MacOS
-xargs -n 1 curl -O < ../tile_set.txt 
-
-# Ubuntu 
-wget -i ../tile_set.txt 
-
-cd ../
-```
+```java -jar [path/to]/ingest-1.1.jar  --input sample_data/gpx --output osm_gpx/ --type gpx -speeds```
 
 Copy map matcher configuration to local directory
 
 ```
+cd osm_gpx
 wget https://raw.githubusercontent.com/sharedstreets/sharedstreets-matcher/master/tracker.properties
 ```
 
 Run map matching system
 
 ```
-java -jar [path/to]/sharedstreets-matcher-1.0.jar --input ./event_data --map ./map_tiles --output  ./output_tiles  --debug  ./debug
+java -jar [path/to]/sharedstreets-matcher-1.1.jar --input ./event_data --output  ./output_tiles  --debug  ./debug
 ```
+
+SharedStreets map tiles will be downloaded and cached as the matcher runs. By default tiles will be cached in `/tmp/shst_tiles/` but this path can be overriden by using the `--tmpTilePath /path/to/tmp/tiles/` option. by default tiles will be sourced from the `osm/planet-2018430` build of SharedStreets data, but source and be overridden using the `--tileSource [shst-source-id]` option.  
 
 Open debug trace files using [geojson.io](http://geojson.io/). Colored street edges show travel speed, and blue and red tick marks along edges show GPS relationship to matched point along street edge. Red tick marks are "failed matches" due to GPS or map errors (image below shows red ticks caused by missing OSM edges).
 
