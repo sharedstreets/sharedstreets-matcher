@@ -3,6 +3,7 @@ package io.sharedstreets.matcher.ingest;
 import io.sharedstreets.matcher.ingest.input.CsvEventExtractor;
 import io.sharedstreets.matcher.ingest.input.DcfhvEventExtractor;
 import io.sharedstreets.matcher.ingest.input.JsonEventExtractor;
+import io.sharedstreets.matcher.ingest.input.JsonInputFormat;
 import io.sharedstreets.matcher.ingest.input.gpx.GpxInputFormat;
 import io.sharedstreets.matcher.ingest.model.Ingest;
 import io.sharedstreets.matcher.ingest.model.InputEvent;
@@ -13,6 +14,7 @@ import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.io.FileOutputFormat;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,6 +142,8 @@ public class Ingester {
 
         if (finalInputType.equals("GPX")) {
             inputEvents = env.createInput(new GpxInputFormat(inputPath, gpsSpeeds, finalVerbose));
+        } else if (finalInputType.equals("JSON")) {
+            inputEvents = env.createInput(new JsonInputFormat(new org.apache.flink.core.fs.Path(inputPath)));
         }
         else {
             DataSet<String> inputStream = env.readTextFile(inputPath);
@@ -202,10 +206,10 @@ public class Ingester {
 //
         Path dataPath = Paths.get(outputPath, "event_data").toAbsolutePath();
 
-        if(dataPath.toFile().exists()) {
-            System.out.print("File already exists: " + outputPath.toString());
-            return;
-        }
+//        if(dataPath.toFile().exists()) {
+//            System.out.print("File already exists: " + outputPath.toString());
+//            return;
+//        }
 
         // write protobuf of traces
         inputEvents.write(new FileOutputFormat<InputEvent>() {
@@ -214,7 +218,7 @@ public class Ingester {
                 Ingest.InputEventProto proto = record.toProto();
                 proto.writeDelimitedTo(this.stream);
             }
-        }, dataPath.toString()).setParallelism(1);
+        }, dataPath.toString(), FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         env.execute("process");
 
