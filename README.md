@@ -70,6 +70,18 @@ Command to load CSV data:
 java -jar [path/to]/ingest-1.1.jar  --input sample_data/csv/csv_trace1.csv --output csv_gpx/ --type csv
 ```
 
+#### JSON data
+
+Ingest tool imports JSON data using the format specified in in the `sample_data/json/` sample files labeled `json_trace1.json` and `json_trace2.json`.
+The file `json_trace2.json` is the same trace as `json_trace.json`, but contains a "PICKUP" and "DROPOFF" event.
+
+A single JSON file can contain multiple traces, as long as each vehicle is uniquely identified within the file(s). The order of the records in the JSON file does not impact map matching, as records are sorted by time for each group of vehicle IDs. 
+
+Command to load JSON data:
+
+```
+java -jar [path/to]/ingest-1.1.jar --input sample_data/json/json_trace1.json --output json_gpx/ --type json
+```
 
 ![Traffic Map](docs/images/pickup_event_trace.png)
 
