@@ -1,6 +1,7 @@
-package io.sharedstreets.matcher.ingest.input;
+package io.sharedstreets.matcher.ingest.input.json;
 
 import io.sharedstreets.matcher.ingest.model.InputEvent;
+import io.sharedstreets.matcher.ingest.model.JsonInputObject;
 import io.sharedstreets.matcher.ingest.model.Point;
 import org.apache.flink.api.common.io.FileInputFormat;
 import org.apache.flink.core.fs.FileInputSplit;
@@ -12,17 +13,14 @@ import org.apache.flink.core.fs.local.LocalFileStatus;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class JsonInputFormat extends FileInputFormat<InputEvent> {
 
-    private final AtomicInteger numFiles = new AtomicInteger(0);
-    private final AtomicInteger currentFile = new AtomicInteger(0);
-    private static AtomicReference<JsonDTO> fileContents = new AtomicReference<>(new JsonDTO());
+    private final AtomicInteger numEvents = new AtomicInteger(0);
+    private final AtomicInteger currentEventIndex = new AtomicInteger(0);
+    private static JsonInputObject parsedFileContents = new JsonInputObject();
 
     public JsonInputFormat(Path filePath) {
         super(filePath);
@@ -37,27 +35,22 @@ public class JsonInputFormat extends FileInputFormat<InputEvent> {
         // take the desired number of splits into account
         minNumSplits = Math.max(minNumSplits, this.numSplits);
 
-        final Path path = this.filePath;
-
         final List<FileInputSplit> inputSplits = new ArrayList<>(minNumSplits);
-
-        final FileSystem fs = this.filePath.getFileSystem();
-        int splitNum = 0;
-        File dir = new File(path.getPath());
+        final FileSystem fs = filePath.getFileSystem();
+        File dir = new File(filePath.getPath());
         File[] files = dir.listFiles();
 
         if (files != null) {
+            int splitNum = 0;
+
             for (File f : files) {
-
                 FileStatus file = new LocalFileStatus(f, fs);
-                FileInputSplit split = new FileInputSplit(splitNum++, file.getPath(), 0, file.getLen(),
-                        null);
+                FileInputSplit split = new FileInputSplit(splitNum++, file.getPath(), 0, file.getLen(), null);
                 inputSplits.add(split);
-
             }
         }
 
-        return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
+        return inputSplits.toArray(new FileInputSplit[0]);
     }
 
     @Override
@@ -65,34 +58,35 @@ public class JsonInputFormat extends FileInputFormat<InputEvent> {
         super.open(fileSplit);
         String pathToFile = filePath + "/" + fileSplit.getPath().getName();
 
-        JsonDTO result = JsonParser.parseJson(pathToFile);
-        fileContents = new AtomicReference<>(result);
-        numFiles.compareAndSet(0, result.eventData.size());
+        JsonInputObject result = JsonParser.parseJson(pathToFile);
+
+        if (result != null) {
+            parsedFileContents = result;
+            numEvents.compareAndSet(0, result.eventData.size());
+        }
     }
 
     @Override
     public boolean reachedEnd() {
-        return currentFile.get() >= numFiles.get();
+        return currentEventIndex.get() >= numEvents.get();
     }
 
     @Override
     public InputEvent nextRecord(InputEvent reuse) {
-        int index = foo();
+        int index = incrementEventIndex();
 
-        reuse.vehicleId = fileContents.get().eventData.get(index).vehicleId;
-        reuse.time = fileContents.get().eventData.get(index).timeStamp;
-        reuse.point = new Point(fileContents.get().eventData.get(index).longitude, fileContents.get().eventData.get(index).latitude);
+        reuse.vehicleId = parsedFileContents.eventData.get(index).vehicleId;
+        reuse.time = parsedFileContents.eventData.get(index).timeStamp;
+        reuse.point = new Point(parsedFileContents.eventData.get(index).longitude, parsedFileContents.eventData.get(index).latitude);
 
-        if (fileContents.get().eventData.get(index).eventType != null) {
-            HashMap<String, Double> event = new HashMap<>();
-            event.put(fileContents.get().eventData.get(index).eventType, 0.0);
-            reuse.eventData = event;
+        if (parsedFileContents.eventData.get(index).eventType != null) {
+            reuse.eventData = parsedFileContents.eventData.get(index).eventType;
         }
 
         return reuse;
     }
 
-    synchronized int foo() {
-        return currentFile.getAndIncrement();
+    private synchronized int incrementEventIndex() {
+        return currentEventIndex.getAndIncrement();
     }
 }
