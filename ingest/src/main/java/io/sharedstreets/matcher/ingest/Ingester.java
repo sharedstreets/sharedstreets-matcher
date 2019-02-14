@@ -160,15 +160,15 @@ public class Ingester {
                 // open text based file formats and map strings to extractor methods
                 inputEvents = inputStream.flatMap((FlatMapFunction<String, InputEvent>) (value, out) -> {
                     if (finalInputType.equals(FileType.CSV.toString())) {
-                        List<InputEvent> inputEvents1 = CsvEventExtractor.extractEvents(value, finalVerbose);
+                        List<InputEvent> csvInputEvents = CsvEventExtractor.extractEvents(value, finalVerbose);
 
-                        for (InputEvent inputEvent : inputEvents1) {
+                        for (InputEvent inputEvent : csvInputEvents) {
                             out.collect(inputEvent);
                         }
                     } else if (finalInputType.equals(FileType.DCFHV.toString())) {
-                        List<InputEvent> inputEvents1 = DcfhvEventExtractor.extractEvents(value, finalVerbose);
+                        List<InputEvent> dcfhvInputEvents = DcfhvEventExtractor.extractEvents(value, finalVerbose);
 
-                        for (InputEvent inputEvent : inputEvents1) {
+                        for (InputEvent inputEvent : dcfhvInputEvents) {
                             out.collect(inputEvent);
                         }
                     }
