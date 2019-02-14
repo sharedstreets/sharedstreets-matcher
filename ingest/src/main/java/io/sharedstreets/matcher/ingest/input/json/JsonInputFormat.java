@@ -20,7 +20,7 @@ public class JsonInputFormat extends FileInputFormat<InputEvent> {
 
     private final AtomicInteger numEvents = new AtomicInteger(0);
     private final AtomicInteger currentEventIndex = new AtomicInteger(0);
-    private static JsonInputObject parsedFileContents = new JsonInputObject();
+    private transient JsonInputObject parsedFileContents = new JsonInputObject();
 
     public JsonInputFormat(Path filePath) {
         super(filePath);
@@ -56,7 +56,7 @@ public class JsonInputFormat extends FileInputFormat<InputEvent> {
     @Override
     public void open(FileInputSplit fileSplit) throws IOException {
         super.open(fileSplit);
-        String pathToFile = filePath + "/" + fileSplit.getPath().getName();
+        String pathToFile = filePath + "/" + currentSplit.getPath().getName();
 
         JsonInputObject result = JsonParser.parseJson(pathToFile);
 
