@@ -1,0 +1,49 @@
+{
+	"eventData": [
+		{
+			"vehicleId":"test_trace",
+			"timeStamp":1550021697198,
+			"latitude":32.981278,
+			"longitude":-96.70976413,
+			"eventType": {
+				"gpsSpeed":12.310797
+			}
+		},
+		{
+			"vehicleId":"test_trace",
+			"timeStamp":1550021707198,
+			"latitude":32.98110025,
+			"longitude":-96.709954083,
+			"eventType": {
+				"gpsSpeed":11.960151
+			}
+		},
+		{
+			"vehicleId":"test_trace",
+			"timeStamp":1550021717198,
+			"latitude":32.98100383,
+			"longitude":-96.71010795,
+			"eventType": {
+				"gpsSpeed":9.841646
+			}
+		},
+		{
+			"vehicleId":"test_trace",
+			"timeStamp":1550021727198,
+			"latitude":32.98092837,
+			"longitude":-96.71021082,
+			"eventType": {
+				"gpsSpeed":5.802207
+			}
+		},
+		{
+			"vehicleId":"test_trace",
+			"timeStamp":1550021757198,
+			"latitude":32.98087908,
+			"longitude":-96.71030881,
+			"eventType": {
+				"gpsSpeed":3.620221
+			}
+		}
+	]
+}

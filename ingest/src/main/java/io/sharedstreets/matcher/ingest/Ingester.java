@@ -2,18 +2,16 @@ package io.sharedstreets.matcher.ingest;
 
 import io.sharedstreets.matcher.ingest.input.CsvEventExtractor;
 import io.sharedstreets.matcher.ingest.input.DcfhvEventExtractor;
-import io.sharedstreets.matcher.ingest.input.JsonEventExtractor;
+import io.sharedstreets.matcher.ingest.input.json.JsonInputFormat;
 import io.sharedstreets.matcher.ingest.input.gpx.GpxInputFormat;
 import io.sharedstreets.matcher.ingest.model.Ingest;
 import io.sharedstreets.matcher.ingest.model.InputEvent;
-import io.sharedstreets.matcher.ingest.util.TileId;
 import org.apache.commons.cli.*;
 import org.apache.flink.api.common.functions.FlatMapFunction;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.io.FileOutputFormat;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.util.Collector;
+import org.apache.flink.core.fs.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +22,25 @@ import java.util.List;
 
 public class Ingester {
 
-    static Logger logger = LoggerFactory.getLogger(Ingester.class);
+    public enum FileType {
+        CSV("CSV"),
+        JSON("JSON"),
+        GPX("GPX"),
+        DCFHV("DCFHV");
+
+        private final String stringValue;
+
+        FileType(String csv) {
+            stringValue = csv;
+        }
+
+        @Override
+        public String toString() {
+            return stringValue;
+        }
+    }
+
+    private static Logger logger = LoggerFactory.getLogger(Ingester.class);
 
     public static void main(String[] args) throws Exception {
         // create the command line parser
@@ -33,88 +49,83 @@ public class Ingester {
         // create the Options
         Options options = new Options();
 
-        options.addOption( OptionBuilder.withLongOpt( "input" )
-                .withDescription( "path to input files" )
+        options.addOption(OptionBuilder.withLongOpt("input")
+                .withDescription("path to input files")
                 .hasArg()
                 .withArgName("INPUT-DIR")
-                .create() );
+                .create());
 
-        options.addOption( OptionBuilder.withLongOpt( "type" )
-                .withDescription( "input type, supports: [CSV, JSON, GPX]" )
+        options.addOption(OptionBuilder.withLongOpt("type")
+                .withDescription("input type, supports: [CSV, JSON, GPX]")
                 .hasArg()
                 .withArgName("INPUT-DIR")
-                .create() );
+                .create());
 
-        options.addOption( OptionBuilder.withLongOpt( "output" )
-                .withDescription( "path to output (will be overwritten)" )
+        options.addOption(OptionBuilder.withLongOpt("output")
+                .withDescription("path to output (will be overwritten)")
                 .hasArg()
                 .withArgName("OUTPUT-DIR")
-                .create() );
-
-
+                .create());
 
         options.addOption("speeds", "track GPS speed when available");
-        options.addOption("verbose", "verbose error output" );
+        options.addOption("verbose", "verbose error output");
 
         String inputPath = "";
-
         String outputPath = "";
-
         String inputType = "";
 
 
         boolean verbose = false;
-
-
         boolean gpsSpeeds = false;
 
         try {
             // parse the command line arguments
-            CommandLine line = parser.parse( options, args );
+            CommandLine line = parser.parse(options, args);
 
-
-
-            if( line.hasOption( "input" ) ) {
+            if (line.hasOption("input")) {
                 // print the value of block-size
-                inputPath = line.getOptionValue( "input" );
+                inputPath = line.getOptionValue("input");
             }
 
-            if( line.hasOption( "output" ) ) {
+            if (line.hasOption("output")) {
                 // print the value of block-size
-                outputPath = line.getOptionValue( "output" );
+                outputPath = line.getOptionValue("output");
             }
 
-            if( line.hasOption( "speeds" ) ) {
+            if (line.hasOption("speeds")) {
                 // print the value of block-size
                 gpsSpeeds = true;
             }
 
-            if( line.hasOption( "verbose" ) ) {
+            if (line.hasOption("verbose")) {
                 verbose = true;
             }
 
-            if( line.hasOption( "type" ) ) {
+            if (line.hasOption("type")) {
                 // print the value of block-size
-                inputType = line.getOptionValue( "type" ).trim().toUpperCase();
+                inputType = line.getOptionValue("type").trim().toUpperCase();
+            } else {
+                String[] fileParts = inputPath.split("\\.");
+                switch (fileParts[fileParts.length - 1].toLowerCase()) {
+                    case "csv":
+                        inputType = FileType.CSV.toString();
+                        break;
+                    case "json":
+                        inputType = FileType.JSON.toString();
+                        break;
+                    case "gpx":
+                        inputType = FileType.GPX.toString();
+                        break;
+                    case "dcfhv":
+                        inputType = FileType.DCFHV.toString();
+                        break;
+                }
             }
-            else {
-                String fileParts[] = inputPath.split("\\.");
-                if(fileParts[fileParts.length-1].toLowerCase().equals("csv"))
-                    inputType = "CSV";
-                else if(fileParts[fileParts.length-1].toLowerCase().equals("json"))
-                    inputType = "JSON";
-                else if(fileParts[fileParts.length-1].toLowerCase().equals("gpx"))
-                    inputType = "GPX";
-                else if(fileParts[fileParts.length-1].toLowerCase().equals("dcfhv"))
-                    inputType = "DCFHV";
-            }
-
-        }
-        catch( Exception exp ) {
+        } catch (Exception exp) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp( "integster", options );
+            formatter.printHelp("integster", options);
 
-            System.out.println( "Unexpected exception:" + exp.getMessage() );
+            System.out.println("Unexpected exception:" + exp.getMessage());
             return;
         }
 
@@ -122,53 +133,46 @@ public class Ingester {
         final boolean finalVerbose = verbose;
 
         // let's go...
-
         logger.info("Starting up streams...");
-
         ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-        if(inputPath == null || inputPath.trim().isEmpty()) {
+        if (inputPath == null || inputPath.trim().isEmpty()) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp( "integster", options );
+            formatter.printHelp("integster", options);
             return;
         }
 
         // process events
 
         // step 1: read strings (blocks of location events from file)
-        DataSet<InputEvent> inputEvents = null;
+        DataSet<InputEvent> inputEvents;
 
-        if (finalInputType.equals("GPX")) {
-            inputEvents = env.createInput(new GpxInputFormat(inputPath, gpsSpeeds, finalVerbose));
-        }
-        else {
-            DataSet<String> inputStream = env.readTextFile(inputPath);
+        switch (FileType.valueOf(finalInputType)) {
+            case GPX:
+                inputEvents = env.createInput(new GpxInputFormat(inputPath, gpsSpeeds, finalVerbose));
+                break;
+            case JSON:
+                inputEvents = env.createInput(new JsonInputFormat(new org.apache.flink.core.fs.Path(inputPath)));
+                break;
+            default:
+                DataSet<String> inputStream = env.readTextFile(inputPath);
 
-            // open text based file formats and map strings to extractor methods
-            inputEvents = inputStream.flatMap(new FlatMapFunction<String, InputEvent>() {
+                // open text based file formats and map strings to extractor methods
+                inputEvents = inputStream.flatMap((FlatMapFunction<String, InputEvent>) (value, out) -> {
+                    if (finalInputType.equals(FileType.CSV.toString())) {
+                        List<InputEvent> csvInputEvents = CsvEventExtractor.extractEvents(value, finalVerbose);
 
-                @Override
-                public void flatMap(String value, Collector<InputEvent> out) throws Exception {
-
-                    if (finalInputType.equals("CSV")) {
-                        List<InputEvent> inputEvents = CsvEventExtractor.extractEvents(value, finalVerbose);
-
-                        for (InputEvent inputEvent : inputEvents)
+                        for (InputEvent inputEvent : csvInputEvents) {
                             out.collect(inputEvent);
+                        }
+                    } else if (finalInputType.equals(FileType.DCFHV.toString())) {
+                        List<InputEvent> dcfhvInputEvents = DcfhvEventExtractor.extractEvents(value, finalVerbose);
 
-                    } else if (finalInputType.equals("JSON")) {
-                        List<InputEvent> inputEvents = JsonEventExtractor.extractEvents(value, finalVerbose);
-
-                        for (InputEvent inputEvent : inputEvents)
+                        for (InputEvent inputEvent : dcfhvInputEvents) {
                             out.collect(inputEvent);
-                    } else if (finalInputType.equals("DCFHV")) {
-                        List<InputEvent> inputEvents = DcfhvEventExtractor.extractEvents(value, finalVerbose);
-
-                        for (InputEvent inputEvent : inputEvents)
-                            out.collect(inputEvent);
+                        }
                     }
-                }
-            });
+                });
         }
 
 //        // create list of map tiles for input traces
@@ -202,9 +206,8 @@ public class Ingester {
 //
         Path dataPath = Paths.get(outputPath, "event_data").toAbsolutePath();
 
-        if(dataPath.toFile().exists()) {
-            System.out.print("File already exists: " + outputPath.toString());
-            return;
+        if (dataPath.toFile().exists()) {
+            System.out.print("File already exists: " + outputPath + " \n...Overwriting\n");
         }
 
         // write protobuf of traces
@@ -214,9 +217,8 @@ public class Ingester {
                 Ingest.InputEventProto proto = record.toProto();
                 proto.writeDelimitedTo(this.stream);
             }
-        }, dataPath.toString()).setParallelism(1);
+        }, dataPath.toString(), FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
         env.execute("process");
-
     }
 }
