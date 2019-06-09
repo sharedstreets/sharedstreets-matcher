@@ -3,7 +3,6 @@ package io.sharedstreets.matcher;
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
 import io.sharedstreets.barefoot.road.BaseRoad;
-import io.sharedstreets.barefoot.roadmap.Loader;
 import io.sharedstreets.barefoot.roadmap.RoadMap;
 import io.sharedstreets.matcher.input.Ingest;
 import io.sharedstreets.matcher.model.aggregation.*;
