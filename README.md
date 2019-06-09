@@ -34,7 +34,9 @@ Run map matching system
 java -jar [path/to]/sharedstreets-matcher-1.1.jar --input ./event_data --output  ./output_tiles  --debug  ./debug
 ```
 
-SharedStreets map tiles will be downloaded and cached as the matcher runs. By default tiles will be cached in `/tmp/shst_tiles/` but this path can be overriden by using the `--tmpTilePath /path/to/tmp/tiles/` option. by default tiles will be sourced from the `osm/planet-2018430` build of SharedStreets data, but source and be overridden using the `--tileSource [shst-source-id]` option.  
+SharedStreets map tiles will be downloaded and cached as the matcher runs. By default tiles will be cached in `/tmp/shst_tiles/` but this path can be overriden by using the `--tmpTilePath /path/to/tmp/tiles/` option. By default tiles will be sourced from the `osm/planet-2018430` build of SharedStreets data, but source and be overridden using the `--tileSource [shst-source-id]` option.
+By default tiles will be loaded from server `https://tiles.sharedstreets.io/` but the server can be overridden by using the `--tileServer https://mytileserver.org/` option.
+By default tiles detail level will include roads upto road class 6 (Unclassified), but, e.g. to match bike trips, this can be overriden using the `--roadClass 8` option (Note that these tiles currently are not available from the official SharedStreets tiles erver but must be custom built using sharedstreets-builder.
 
 Open debug trace files using [geojson.io](http://geojson.io/). Colored street edges show travel speed, and blue and red tick marks along edges show GPS relationship to matched point along street edge. Red tick marks are "failed matches" due to GPS or map errors (image below shows red ticks caused by missing OSM edges).
 

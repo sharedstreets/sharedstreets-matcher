@@ -109,9 +109,9 @@ public class SharedStreetsReader implements RoadReader {
         this.tilePath = tilePath;
     }
 
-    public SharedStreetsReader(String tmpTilePath, String tileSource, TileId tileId) throws IOException {
+    public SharedStreetsReader(String tmpTilePath, String tileServer, String tileSource, Integer roadClass, TileId tileId) throws IOException {
 
-        String tileFileName = tileId.toString() + ".geometry.6.pbf";
+        String tileFileName = tileId.toString() + ".geometry."+ roadClass +".pbf";
 
         File tileTempFile = new File(tmpTilePath, tileFileName);
 
@@ -121,7 +121,7 @@ public class SharedStreetsReader implements RoadReader {
 
             logger.info("loaded tile:  {} {}", tileSource, tileFileName);
 
-            URL tileUrl = new URL("https://tiles.sharedstreets.io/" + tileSource + "/" + tileFileName);
+            URL tileUrl = new URL(tileServer + tileSource + "/" + tileFileName);
             FileUtils.copyURLToFile(tileUrl, tileTempFile);
 
         }
