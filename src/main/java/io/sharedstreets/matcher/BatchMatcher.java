@@ -43,78 +43,78 @@ public class BatchMatcher {
 
         // create the Options
         Options options = new Options();
-//        options.addOption( OptionBuilder.withLongOpt( "map" )
-//                .withDescription( "path to map tiles" )
+//        options.addOption( Option.builder().longOpt( "map" )
+//                .desc( "path to map tiles" )
 //                .hasArg()
-//                .withArgName("MAP-DIR")
-//                .create() );
+//                .argName("MAP-DIR")
+//                .build() );
 
-        options.addOption( OptionBuilder.withLongOpt( "tracker" )
-                .withDescription( "tracker.properties files" )
+        options.addOption( Option.builder().longOpt( "tracker" )
+                .desc( "tracker.properties files" )
                 .hasArg()
-                .withArgName("TRACKER-PATH")
-                .create() );
+                .argName("TRACKER-PATH")
+                .build() );
 
-        options.addOption( OptionBuilder.withLongOpt( "input" )
-                .withDescription( "path to input files" )
+        options.addOption( Option.builder().longOpt( "input" )
+                .desc( "path to input files" )
                 .hasArg()
-                .withArgName("INPUT-DIR")
-                .create() );
+                .argName("INPUT-DIR")
+                .build() );
 
-        options.addOption( OptionBuilder.withLongOpt( "output" )
-                .withDescription( "path to output" )
+        options.addOption( Option.builder().longOpt( "output" )
+                .desc( "path to output" )
                 .hasArg()
-                .withArgName("OUTPUT-DIR")
-                .create() );
+                .argName("OUTPUT-DIR")
+                .build() );
 
-        options.addOption( OptionBuilder.withLongOpt( "debug" )
-                .withDescription( "path to debug output" )
+        options.addOption( Option.builder().longOpt( "debug" )
+                .desc( "path to debug output" )
                 .hasArg()
-                .withArgName("DUBUG-DIR")
-                .create() );
+                .argName("DUBUG-DIR")
+                .build() );
 
-        options.addOption( OptionBuilder.withLongOpt( "tileServer" )
-                .withDescription( "tile server" )
+        options.addOption( Option.builder().longOpt( "tileServer" )
+                .desc( "tile server" )
                 .hasArg()
-                .withArgName("TILE-SERVER")
-                .create() );
+                .argName("TILE-SERVER")
+                .build() );
 
-        options.addOption( OptionBuilder.withLongOpt( "tileSource" )
-                .withDescription( "tile source" )
+        options.addOption( Option.builder().longOpt( "tileSource" )
+                .desc( "tile source" )
                 .hasArg()
-                .withArgName("TILE-SOURCE")
-                .create() );
+                .argName("TILE-SOURCE")
+                .build() );
 
-        options.addOption( OptionBuilder.withLongOpt( "roadClass" )
-                .withDescription( "road class" )
+        options.addOption( Option.builder().longOpt( "roadClass" )
+                .desc( "road class" )
                 .hasArg()
-                .withType(PatternOptionBuilder.NUMBER_VALUE)
-                .withArgName("ROAD-CLASS")
-                .create() );
+                .type(PatternOptionBuilder.NUMBER_VALUE)
+                .argName("ROAD-CLASS")
+                .build() );
 
-        options.addOption( OptionBuilder.withLongOpt( "tmpTilePath" )
-                .withDescription( "tmp tile path" )
+        options.addOption( Option.builder().longOpt( "tmpTilePath" )
+                .desc( "tmp tile path" )
                 .hasArg()
-                .withArgName("TMP-TILE-PATH")
-                .create() );
+                .argName("TMP-TILE-PATH")
+                .build() );
 
-        options.addOption( OptionBuilder.withLongOpt( "dust" )
-                .withDescription( "path to map dust output" )
+        options.addOption( Option.builder().longOpt( "dust" )
+                .desc( "path to map dust output" )
                 .hasArg()
-                .withArgName("DUST-DIR")
-                .create() );
+                .argName("DUST-DIR")
+                .build() );
 
-        options.addOption( OptionBuilder.withLongOpt( "binSize" )
-                .withDescription( "path to map dust output" )
+        options.addOption( Option.builder().longOpt( "binSize" )
+                .desc( "path to map dust output" )
                 .hasArg()
-                .withArgName("DUST-DIR")
-                .create() );
+                .argName("DUST-DIR")
+                .build() );
 
-        options.addOption( OptionBuilder.withLongOpt( "eventType" )
-                .withDescription( "name for event output" )
+        options.addOption( Option.builder().longOpt( "eventType" )
+                .desc( "name for event output" )
                 .hasArg()
-                .withArgName("EVENT-TYPE")
-                .create() );
+                .argName("EVENT-TYPE")
+                .build() );
 
 
         options.addOption("f", "fast snap method" );
