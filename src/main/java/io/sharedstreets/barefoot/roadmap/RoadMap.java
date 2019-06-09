@@ -45,7 +45,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class RoadMap extends Graph<RoadEdge> implements Serializable {
 
+    private final String tileServer;
     private final String tileSource;
+    private final Integer roadClass;
+
     private final String tmpTilePath;
 
     private static final long serialVersionUID = 1L;
@@ -61,11 +64,13 @@ public class RoadMap extends Graph<RoadEdge> implements Serializable {
         return roads;
     }
 
-    public RoadMap(String tmpTilePath, String tileSource) {
+    public RoadMap(String tmpTilePath, String tileServer, String tileSource, Integer roadClass) {
 
         this.tmpTilePath = tmpTilePath;
 
+        this.tileServer = tileServer;
         this.tileSource = tileSource;
+        this.roadClass = roadClass;
 
         index = new Index();
         roads = new ArrayList<>();
@@ -123,7 +128,7 @@ public class RoadMap extends Graph<RoadEdge> implements Serializable {
             if(loadedTiles.contains(tileId))
                 return;
 
-            SharedStreetsReader sharedStreetsReader = new SharedStreetsReader(this.tmpTilePath, this.tileSource, tileId);
+            SharedStreetsReader sharedStreetsReader = new SharedStreetsReader(this.tmpTilePath, this.tileServer, this.tileSource, this.roadClass, tileId);
 
             sharedStreetsReader.open();
 
@@ -172,7 +177,7 @@ public class RoadMap extends Graph<RoadEdge> implements Serializable {
 
         logger.info("inserting roads ...");
 
-        RoadMap roadmap = new RoadMap(null, null);
+        RoadMap roadmap = new RoadMap(null, null, null, null);
 
 
         int geometryCount = 0, counter = 0;

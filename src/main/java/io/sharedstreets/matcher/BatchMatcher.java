@@ -73,10 +73,23 @@ public class BatchMatcher {
                 .withArgName("DUBUG-DIR")
                 .create() );
 
+        options.addOption( OptionBuilder.withLongOpt( "tileServer" )
+                .withDescription( "tile server" )
+                .hasArg()
+                .withArgName("TILE-SERVER")
+                .create() );
+
         options.addOption( OptionBuilder.withLongOpt( "tileSource" )
                 .withDescription( "tile source" )
                 .hasArg()
-                .withArgName("TILE-SOUCCE")
+                .withArgName("TILE-SOURCE")
+                .create() );
+
+        options.addOption( OptionBuilder.withLongOpt( "roadClass" )
+                .withDescription( "road class" )
+                .hasArg()
+                .withType(PatternOptionBuilder.NUMBER_VALUE)
+                .withArgName("ROAD-CLASS")
                 .create() );
 
         options.addOption( OptionBuilder.withLongOpt( "tmpTilePath" )
@@ -106,7 +119,11 @@ public class BatchMatcher {
 
         options.addOption("f", "fast snap method" );
 
+        String tileServer = "https://tiles.sharedstreets.io/";
+
         String tileSource = "osm/planet-180430";
+
+        Integer roadClass = 6;
 
         String tmpTilePath = "/tmp/shst_tiles/";
 
@@ -149,8 +166,16 @@ public class BatchMatcher {
                 outputPath = line.getOptionValue( "output" );
             }
 
+            if( line.hasOption( "tileServer" ) ) {
+                tileServer = line.getOptionValue( "tileServer" );
+            }
+
             if( line.hasOption( "tileSource" ) ) {
                 tileSource = line.getOptionValue( "tileSource" );
+            }
+
+            if( line.hasOption( "roadClass" ) ) {
+                roadClass = Math.toIntExact((Long) line.getParsedOptionValue("roadClass"));
             }
 
             if( line.hasOption( "tmpTilePath" ) ) {
@@ -196,7 +221,7 @@ public class BatchMatcher {
         // as workaround related to Flink serialization of speed matching reducer function
 
         // dynamically load map based on point data
-        SharedStreetsMatcher.map = new RoadMap(tmpTilePath, tileSource);
+        SharedStreetsMatcher.map = new RoadMap(tmpTilePath, tileServer, tileSource, roadClass);
 
         // build match engine
         SharedStreetsMatcher.matcher = MatcherFactory.createMatcher(trackerPath, SharedStreetsMatcher.map);
