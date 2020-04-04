@@ -1,6 +1,5 @@
 /build
 /ingest/build
-/gradle
 .idea/
 *DS_Store
 .gradle
